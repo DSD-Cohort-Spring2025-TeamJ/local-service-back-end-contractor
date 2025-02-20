@@ -31,4 +31,5 @@ jobs:
           application_name: "booking-app"
           environment_name: "Booking-app-env"
           region: "us-east-1"
+          version_label: "deploy-${{ github.run_number }}"
           deployment_package: "target/*.jar"
