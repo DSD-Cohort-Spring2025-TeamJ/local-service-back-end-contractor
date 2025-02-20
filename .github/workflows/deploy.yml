@@ -23,6 +23,9 @@ jobs:
         run: |
           mvn clean package
 
+      - name: List contents of target directory
+        run: ls -l target/
+
       - name: Deploy to EB
         uses: einaregilsson/beanstalk-deploy@v21
         with:
