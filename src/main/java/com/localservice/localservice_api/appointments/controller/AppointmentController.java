@@ -9,7 +9,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 
-@RestController("/service-provider/api/v1/appointments")
+@RestController
+@RequestMapping("/service-provider/api/v1/appointments")
 public class AppointmentController {
 
     private final AppointmentService appointmentService;
