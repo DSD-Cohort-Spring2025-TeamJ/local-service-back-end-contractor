@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 
 @RestController
@@ -30,7 +29,7 @@ public class AppointmentController {
     }
 
     @GetMapping("/{appointment_id}")
-    public Optional<AppointmentModel> viewSingleAppointment (@PathVariable UUID appointment_id) {
+    public Optional<AppointmentModel> viewSingleAppointment (@PathVariable Long appointment_id) {
         return appointmentService.viewSingleAppointment(appointment_id);
     }
 }

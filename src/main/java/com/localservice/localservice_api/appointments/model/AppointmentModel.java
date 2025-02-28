@@ -6,15 +6,14 @@ import jakarta.persistence.*;
 
 import java.time.Instant;
 import java.time.ZonedDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "appointments")
 public class AppointmentModel {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID appointment_id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long appointment_id;
 
     private ZonedDateTime created_at;
     private ZonedDateTime updated_at;
@@ -32,11 +31,11 @@ public class AppointmentModel {
     private String admin_note;
     private String client_note;
 
-    public UUID getAppointment_id() {
+    public Long getAppointment_id() {
         return appointment_id;
     }
 
-    public void setAppointment_id(UUID appointment_id) {
+    public void setAppointment_id(Long appointment_id) {
         this.appointment_id = appointment_id;
     }
 
