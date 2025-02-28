@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class AppointmentService {
@@ -25,7 +24,7 @@ public class AppointmentService {
         return appointmentRepository.findAll();
     }
 
-    public Optional<AppointmentModel> viewSingleAppointment (UUID appointment_id) {
+    public Optional<AppointmentModel> viewSingleAppointment (Long appointment_id) {
         return appointmentRepository.findById(appointment_id);
     }
 }

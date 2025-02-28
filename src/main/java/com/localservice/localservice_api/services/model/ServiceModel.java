@@ -4,15 +4,14 @@ import com.localservice.localservice_api.appointments.model.AppointmentModel;
 import jakarta.persistence.*;
 
 import java.util.List;
-import java.util.UUID;
 
 @Entity
 @Table(name = "services")
 public class ServiceModel {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID service_id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long service_id;
 
     private String service_name;
     private int estimated_time;
@@ -20,11 +19,11 @@ public class ServiceModel {
     @OneToMany(mappedBy = "service_id")
     private List<AppointmentModel> appointments;
 
-    public UUID getService_id() {
+    public Long getService_id() {
         return service_id;
     }
 
-    public void setService_id(UUID service_id) {
+    public void setService_id(Long service_id) {
         this.service_id = service_id;
     }
 
