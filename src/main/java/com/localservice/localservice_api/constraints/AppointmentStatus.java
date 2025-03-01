@@ -1,4 +1,4 @@
-package com.localservice.localservice_api.appointments.enums;
+package com.localservice.localservice_api.constraints;
 
 public enum AppointmentStatus {
     PENDING,

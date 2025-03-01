@@ -1,13 +1,12 @@
-package com.localservice.localservice_api.services.model;
+package com.localservice.localservice_api.entity;
 
-import com.localservice.localservice_api.appointments.model.AppointmentModel;
 import jakarta.persistence.*;
 
 import java.util.List;
 
 @Entity
 @Table(name = "services")
-public class ServiceModel {
+public class Service {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -17,7 +16,7 @@ public class ServiceModel {
     private int estimated_time;
 
     @OneToMany(mappedBy = "service_id")
-    private List<AppointmentModel> appointments;
+    private List<Appointment> appointments;
 
     public Long getService_id() {
         return service_id;
@@ -43,11 +42,11 @@ public class ServiceModel {
         this.estimated_time = estimated_time;
     }
 
-    public List<AppointmentModel> getAppointments() {
+    public List<Appointment> getAppointments() {
         return appointments;
     }
 
-    public void setAppointments(List<AppointmentModel> appointments) {
+    public void setAppointments(List<Appointment> appointments) {
         this.appointments = appointments;
     }
 }
