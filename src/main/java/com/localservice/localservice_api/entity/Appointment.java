@@ -1,7 +1,6 @@
-package com.localservice.localservice_api.appointments.model;
+package com.localservice.localservice_api.entity;
 
-import com.localservice.localservice_api.appointments.enums.AppointmentStatus;
-import com.localservice.localservice_api.services.model.ServiceModel;
+import com.localservice.localservice_api.constraints.AppointmentStatus;
 import jakarta.persistence.*;
 
 import java.time.Instant;
@@ -9,7 +8,7 @@ import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "appointments")
-public class AppointmentModel {
+public class Appointment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -25,7 +24,7 @@ public class AppointmentModel {
 
     @ManyToOne
     @JoinColumn(name = "service_id", referencedColumnName = "service_id")
-    private ServiceModel service_id;
+    private Service service_id;
 
     private String location;
     private String admin_note;
@@ -79,11 +78,11 @@ public class AppointmentModel {
         this.status = status;
     }
 
-    public ServiceModel getService_id() {
+    public Service getService_id() {
         return service_id;
     }
 
-    public void setService_id(ServiceModel service_id) {
+    public void setService_id(Service service_id) {
         this.service_id = service_id;
     }
 

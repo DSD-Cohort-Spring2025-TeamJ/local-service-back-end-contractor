@@ -1,7 +1,7 @@
-package com.localservice.localservice_api.appointments.service;
+package com.localservice.localservice_api.service;
 
-import com.localservice.localservice_api.appointments.model.AppointmentModel;
-import com.localservice.localservice_api.appointments.repository.AppointmentRepository;
+import com.localservice.localservice_api.entity.Appointment;
+import com.localservice.localservice_api.repository.AppointmentRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,15 +16,15 @@ public class AppointmentService {
         this.appointmentRepository = appointmentRepository;
     }
 
-    public AppointmentModel createAppointment(AppointmentModel appointment) {
+    public Appointment createAppointment(Appointment appointment) {
         return appointmentRepository.save(appointment);
     }
 
-    public List<AppointmentModel> viewAllAppointments () {
+    public List<Appointment> viewAllAppointments () {
         return appointmentRepository.findAll();
     }
 
-    public Optional<AppointmentModel> viewSingleAppointment (Long appointment_id) {
+    public Optional<Appointment> viewSingleAppointment (Long appointment_id) {
         return appointmentRepository.findById(appointment_id);
     }
 }

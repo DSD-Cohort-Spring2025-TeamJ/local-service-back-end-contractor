@@ -1,7 +1,7 @@
-package com.localservice.localservice_api.appointments.controller;
+package com.localservice.localservice_api.controller;
 
-import com.localservice.localservice_api.appointments.model.AppointmentModel;
-import com.localservice.localservice_api.appointments.service.AppointmentService;
+import com.localservice.localservice_api.entity.Appointment;
+import com.localservice.localservice_api.service.AppointmentService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -9,7 +9,7 @@ import java.util.Optional;
 
 
 @RestController
-@RequestMapping("/service-provider/api/v1/appointments")
+@RequestMapping("/appointments")
 public class AppointmentController {
 
     private final AppointmentService appointmentService;
@@ -19,17 +19,17 @@ public class AppointmentController {
     }
 
     @PostMapping
-    public AppointmentModel createAppointment (@RequestBody AppointmentModel appointment) {
+    public Appointment createAppointment (@RequestBody Appointment appointment) {
         return appointmentService.createAppointment(appointment);
     }
 
     @GetMapping
-    public List<AppointmentModel> viewAllAppointments () {
+    public List<Appointment> viewAllAppointments () {
         return appointmentService.viewAllAppointments();
     }
 
     @GetMapping("/{appointment_id}")
-    public Optional<AppointmentModel> viewSingleAppointment (@PathVariable Long appointment_id) {
+    public Optional<Appointment> viewSingleAppointment (@PathVariable Long appointment_id) {
         return appointmentService.viewSingleAppointment(appointment_id);
     }
 }
