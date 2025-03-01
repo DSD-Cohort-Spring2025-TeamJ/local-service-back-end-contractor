@@ -3,9 +3,10 @@ package com.localservice.localservice_api.entity;
 import com.localservice.localservice_api.constants.Constants;
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
-import java.time.ZonedDateTime;
 
 @Data
 @Entity
@@ -15,8 +16,10 @@ public class Appointment {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long appointment_id;
 
-    private ZonedDateTime created_at;
-    private ZonedDateTime updated_at;
+    @CreationTimestamp
+    private Instant created_at;
+    @UpdateTimestamp
+    private Instant updated_at;
     private String description;
     private Instant estimated_time;
 
