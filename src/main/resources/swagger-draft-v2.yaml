@@ -1,0 +1,478 @@
+openapi: 3.0.3
+info:
+  title: Service Provider API
+  description: API documentation for the service provider system
+  version: 1.0.0
+servers:
+  - url: https://service-provider/api/v1
+paths:
+  /users:
+    get:
+      summary: Get list of users
+      tags:
+        - User
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+    post:
+      summary: Register a new user
+      tags:
+        - User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '201':
+          description: User registered successfully
+  /users/{user_id}:
+    get:
+      summary: Get a single user by ID
+      tags:
+        - User
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+  /appointments:
+    get:
+      summary: Get all appointments
+      tags:
+        - Appointments
+      responses:
+        '200':
+          description: List of appointments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Appointment'
+    post:
+      summary: Create a new appointment
+      tags:
+        - Appointments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Appointment'
+      responses:
+        '201':
+          description: Appointment created successfully
+  /services:
+    get:
+      summary: Get list of all services
+      tags:
+        - Services
+      responses:
+        '200':
+          description: List of services
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Service'
+  /appointments/{appointment_id}:
+    get:
+      summary: Get appointment details by ID
+      tags:
+        - Appointments
+      parameters:
+        - name: appointment_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Appointment details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Appointment'
+    delete:
+      summary: Delete an appointment by ID
+      tags:
+        - Appointments
+      parameters:
+        - name: appointment_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Appointment deleted
+    patch:
+      summary: Update an appointment by ID
+      tags:
+        - Appointments
+      parameters:
+        - name: appointment_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Appointment'
+      responses:
+        '200':
+          description: Appointment updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+  /parts:
+    get:
+      summary: Get all parts
+      tags:
+        - Parts
+      responses:
+        '200':
+          description: List of parts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Part'
+    post:
+      summary: Add a new part
+      tags:
+        - Parts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Part'
+      responses:
+        '201':
+          description: Part added successfully
+  /parts/{part_id}:
+    get:
+      summary: Get part details by ID
+      tags:
+        - Parts
+      parameters:
+        - name: part_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Part details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Part'
+    delete:
+      summary: Delete a part by ID
+      tags:
+        - Parts
+      parameters:
+        - name: part_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Part deleted
+    patch:
+      summary: Update part details by ID
+      tags:
+        - Parts
+      parameters:
+        - name: part_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Part'
+      responses:
+        '200':
+          description: Part updated successfully
+  /repairs:
+    get:
+      summary: Get all repair jobs
+      tags:
+        - Repair
+      responses:
+        '200':
+          description: List of repair jobs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Repair'
+    post:
+      summary: Create a repair job
+      tags:
+        - Repair
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Repair'
+      responses:
+        '201':
+          description: Repair job created successfully
+  /repairs/{repair_id}:
+    get:
+      summary: Get repair job details by ID
+      tags:
+        - Repair
+      parameters:
+        - name: repair_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Repair job details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Repair'
+    delete:
+      summary: Delete a repair job by ID
+      tags:
+        - Repair
+      parameters:
+        - name: repair_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Repair job deleted
+    patch:
+      summary: Update repair job details by ID
+      tags:
+        - Repair
+      parameters:
+        - name: repair_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Repair'
+      responses:
+        '200':
+          description: Repair job updated successfully
+  /notifications:
+    get:
+      summary: Get all notifications
+      tags:
+        - Notifications
+      responses:
+        '200':
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Notification'
+  /notifications/{notification_id}:
+    get:
+      summary: Get notification details by ID
+      tags:
+        - Notifications
+      parameters:
+        - name: notification_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Notification details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Notification'
+    post:
+      summary: Send a notification
+      tags:
+        - Notifications
+      parameters:
+        - name: notification_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notification'
+      responses:
+        '201':
+          description: Notification sent successfully
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+    Appointment:
+      type: object
+      properties:
+        appointment_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        description:
+          type: string
+        estimated_time:
+          type: string
+          format: date-time
+        service_id:
+          type: string
+          format: uuid
+        location:
+          type: string
+        admin_note:
+          type: string
+        client_note:
+          type: string
+    Service: 
+      type: object
+      properties:
+        service_id:
+          type: string
+          format: uuid
+        service_name:
+          type: string
+        estimated_time:
+          type: integer
+    Part:
+      type: object
+      properties:
+        part_id:
+          type: string
+          format: uuid
+        part_name:
+          type: string
+        quantity_needed:
+          type: integer
+    Repair:
+      type: object
+      properties:
+        repair_id:
+          type: string
+          format: uuid
+        description:
+          type: string
+        service_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Notification:
+      type: object
+      properties:
+        notification_id:
+          type: string
+          format: uuid
+        message:
+          type: string
+        sent_at:
+          type: string
+          format: date-time
