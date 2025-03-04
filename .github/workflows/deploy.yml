@@ -51,5 +51,5 @@ jobs:
           application_name: "booking-app"
           environment_name: "Booking-app-env"
           region: "us-east-1"
-          version_label: "deploy-${{ github.run_number }}"
+          version_label: "deploy-${{ github.run_number }}-${{ github.sha }}"
           deployment_package: "target/localservice-api-0.0.1-SNAPSHOT.jar"
