@@ -45,6 +45,7 @@ jobs:
 
       - name: Wait for environment to be ready
         run: |
+          export AWS_REGION="us-east-1" 
           aws elasticbeanstalk describe-environments --environment-names "Booking-app-env" --region $AWS_REGION --query "Environments[0].Status" --output text
           until [ "$(aws elasticbeanstalk describe-environments --environment-names "Booking-app-env" --region $AWS_REGION --query "Environments[0].Status" --output text)" == "Ready" ]; do
             echo "Waiting for environment to be ready..."
