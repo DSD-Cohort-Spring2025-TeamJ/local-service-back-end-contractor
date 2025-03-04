@@ -24,6 +24,13 @@ jobs:
         run: |
           mvn clean package
 
+      - name: Set AWS credentials
+        run: |
+          # Configure AWS CLI with the AWS credentials from GitHub Secrets
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set region us-east-1
+
       - name: Set environment variables for Elastic Beanstalk
         run: |
           # Set AWS region
