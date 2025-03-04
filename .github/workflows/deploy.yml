@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - ticket-17
 
 jobs:
   deploy:
@@ -23,6 +24,11 @@ jobs:
         run: | 
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
           echo "DB_URL=${{ secrets.DB_URL }}" >> $GITHUB_ENV
+
+      - name: Check environment variables
+        run: |
+          echo "DB_URL=$DB_URL"
+          echo "DB_PASSWORD=$DB_PASSWORD"
 
       - name: Build application
         run: |
