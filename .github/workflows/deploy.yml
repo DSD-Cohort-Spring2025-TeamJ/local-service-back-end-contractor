@@ -26,8 +26,12 @@ jobs:
 
       - name: Set environment variables for Elastic Beanstalk
         run: |
+          # Set AWS region
+          export AWS_REGION="us-east-1"
+          
           # Use AWS CLI to update Elastic Beanstalk environment with DB_URL and DB_PASSWORD
           aws elasticbeanstalk update-environment \
+            --region $AWS_REGION \
             --environment-name "Booking-app-env" \
             --option-settings "Namespace=aws:elasticbeanstalk:application:environment,OptionName=DB_URL,Value=${{ secrets.DB_URL }}" \
             "Namespace=aws:elasticbeanstalk:application:environment,OptionName=DB_PASSWORD,Value=${{ secrets.DB_PASSWORD }}"
