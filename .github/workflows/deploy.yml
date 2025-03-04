@@ -20,7 +20,9 @@ jobs:
           java-version: '17'
 
       - name: Set environment variables
-        run: echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
+        run: | 
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
+          echo "DB_URL=${{ secrets.DB_URL }}" >> $GITHUB_ENV
 
       - name: Build application
         run: |
