@@ -1,11 +1,11 @@
 package com.localservice.localservice_api.service;
 
+import com.localservice.localservice_api.entity.Service;
 import com.localservice.localservice_api.repository.ServiceRepository;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
+@org.springframework.stereotype.Service
 public class ServiceService {
     private final ServiceRepository serviceRepository;
 
@@ -13,7 +13,7 @@ public class ServiceService {
         this.serviceRepository = serviceRepository;
     }
 
-    public List<com.localservice.localservice_api.entity.Service> getServiceList () {
+    public List<Service> getServiceList () {
         return serviceRepository.findAll();
     }
 }
