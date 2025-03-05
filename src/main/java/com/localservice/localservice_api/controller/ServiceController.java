@@ -21,7 +21,7 @@ public class ServiceController {
 
     @GetMapping
     public ResponseEntity<List<Service>> getServiceList () {
-        List<Service> services = serviceService.getServiceList();
-        return ResponseEntity.ok(services);
+        List<Service> serviceEntities = serviceService.getServiceList();
+        return ResponseEntity.ok(serviceEntities);
     }
 }
