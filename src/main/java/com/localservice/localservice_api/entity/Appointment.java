@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
+import java.util.List;
 
 @Data
 @Entity
@@ -38,6 +39,8 @@ public class Appointment {
     private String admin_note;
     private String assigned_technician_list;
     private double quoted_price;
-    private String missing_item_list;
+
+    @Transient
+    private List<String> missing_item_list;
 
 }
