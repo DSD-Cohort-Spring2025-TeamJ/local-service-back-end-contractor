@@ -3,8 +3,6 @@ package com.localservice.localservice_api.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.util.List;
-
 @Data
 @Entity
 public class Service {
@@ -15,9 +13,6 @@ public class Service {
 
     private String service_name;
     private int estimated_time;
-
-    @OneToMany(mappedBy = "service_id")
-    private List<Appointment> appointments;
 
 }
 
