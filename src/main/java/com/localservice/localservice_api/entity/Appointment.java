@@ -16,11 +16,15 @@ public class Appointment {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long appointment_id;
 
+    private String client_name;
+    private String client_email;
+    private String client_phone;
+
     @CreationTimestamp
     private Instant created_at;
     @UpdateTimestamp
     private Instant updated_at;
-    private String description;
+    private String issue_description;
     private Instant estimated_time;
 
     @Enumerated(EnumType.STRING)
@@ -32,6 +36,8 @@ public class Appointment {
 
     private String location;
     private String admin_note;
-    private String client_note;
+    private String assigned_technician_list;
+    private double quoted_price;
+    private String missing_item_list;
 
 }
