@@ -27,7 +27,7 @@ public class ServiceController {
         return ResponseEntity.ok(serviceEntities);
     }
 
-    @GetMapping("/{service_id}")
+    @GetMapping("/{service_id}/timeSlots")
     public ResponseEntity<ServiceTechnicianDto> getTimeSlotsBasedOnSelectedService(@PathVariable long service_id ) {
         ServiceTechnicianDto serviceTechnicianDto = serviceService.getTimeSlotsBasedOnSelectedService(service_id);
         return ResponseEntity.ok(serviceTechnicianDto);
