@@ -1,9 +1,11 @@
 package com.localservice.localservice_api.controller;
 
+import com.localservice.localservice_api.dto.ServiceTechnicianDto;
 import com.localservice.localservice_api.entity.Service;
 import com.localservice.localservice_api.service.ServiceService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,5 +25,11 @@ public class ServiceController {
     public ResponseEntity<List<Service>> getServiceList () {
         List<Service> serviceEntities = serviceService.getServiceList();
         return ResponseEntity.ok(serviceEntities);
+    }
+
+    @GetMapping("/{service_id}")
+    public ResponseEntity<ServiceTechnicianDto> getTimeSlotsBasedOnSelectedService(@PathVariable long service_id ) {
+        ServiceTechnicianDto serviceTechnicianDto = serviceService.getTimeSlotsBasedOnSelectedService(service_id);
+        return ResponseEntity.ok(serviceTechnicianDto);
     }
 }

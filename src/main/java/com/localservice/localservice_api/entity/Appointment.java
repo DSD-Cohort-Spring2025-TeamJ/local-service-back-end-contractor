@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -20,11 +21,8 @@ public class Appointment {
     private String client_name;
     private String client_email;
     private String client_phone;
-
-    @CreationTimestamp
-    private Instant created_at;
-    @UpdateTimestamp
-    private Instant updated_at;
+    private LocalDateTime start_time;
+    private LocalDateTime end_time;
     private String issue_description;
     private Instant estimated_time;
 
