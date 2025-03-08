@@ -17,5 +17,5 @@ public class Item {
     private String item_name;
     private int type;
     private double unit_price;
-    private int stock_quantity;
+    private int stock_qty;
 }
