@@ -5,6 +5,7 @@ import com.localservice.localservice_api.entity.Service;
 import com.localservice.localservice_api.entity.Technician;
 import com.localservice.localservice_api.repository.ServiceRepository;
 import com.localservice.localservice_api.repository.TechnicianRepository;
+import jakarta.persistence.EntityNotFoundException;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -51,7 +52,7 @@ public class ServiceService {
 
     private int getEstimatedTimeBasedOnService (long service_id) {
         Service service = serviceRepository.findById(service_id)
-                .orElseThrow(() -> new RuntimeException("No Service found with that ID"));
+                .orElseThrow(() -> new EntityNotFoundException("No Service found with that ID"));
         return service.getEstimated_time();
     }
 

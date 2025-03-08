@@ -1,5 +1,6 @@
 package com.localservice.localservice_api.controller;
 
+import com.localservice.localservice_api.dto.AppointmentRequestDto;
 import com.localservice.localservice_api.entity.Appointment;
 import com.localservice.localservice_api.response.AdminAppointmentViewDTO;
 import com.localservice.localservice_api.service.AppointmentService;
@@ -22,8 +23,8 @@ public class AppointmentController {
     }
 
     @PostMapping
-    public ResponseEntity<Appointment> createAppointment (@RequestBody Appointment appointment) {
-            Appointment savedAppointment = appointmentService.createAppointment(appointment);
+    public ResponseEntity<Appointment> createAppointment (@RequestBody AppointmentRequestDto appointmentRequestDto) {
+            Appointment savedAppointment = appointmentService.createAppointment(appointmentRequestDto);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedAppointment);
     }
 
