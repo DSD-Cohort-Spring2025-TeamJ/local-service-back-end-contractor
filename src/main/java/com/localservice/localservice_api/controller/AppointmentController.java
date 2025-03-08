@@ -1,5 +1,6 @@
 package com.localservice.localservice_api.controller;
 
+import com.localservice.localservice_api.dto.AppointmentRequestDto;
 import com.localservice.localservice_api.entity.Appointment;
 import com.localservice.localservice_api.response.AdminAppointmentViewDTO;
 import com.localservice.localservice_api.service.AppointmentService;
@@ -22,21 +23,41 @@ public class AppointmentController {
     }
 
     @PostMapping
-    public ResponseEntity<Appointment> createAppointment (@RequestBody Appointment appointment) {
-            Appointment savedAppointment = appointmentService.createAppointment(appointment);
+    public ResponseEntity<?> createAppointment(@RequestBody AppointmentRequestDto appointmentRequestDto) {
+        try {
+            Appointment savedAppointment = appointmentService.createAppointment(appointmentRequestDto);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedAppointment);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error creating appointment: " + e.getMessage());
+        }
     }
 
     @GetMapping
-    public ResponseEntity<List<Appointment>> viewAllAppointments () {
-        List<Appointment> appointments = appointmentService.viewAllAppointments();
-        return ResponseEntity.ok(appointments);
+    public ResponseEntity<?> viewAllAppointments() {
+        try {
+            List<Appointment> appointments = appointmentService.viewAllAppointments();
+            return ResponseEntity.ok(appointments);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error retrieving appointments: " + e.getMessage());
+        }
     }
 
     @GetMapping("/{appointment_id}")
-    public ResponseEntity<Optional<Appointment>> viewSingleAppointment (@PathVariable Long appointment_id) {
-        Optional<Appointment> appointment = appointmentService.viewSingleAppointment(appointment_id);
-        return ResponseEntity.ok(appointment);
+    public ResponseEntity<?> viewSingleAppointment(@PathVariable Long appointment_id) {
+        try {
+            Optional<Appointment> appointment = appointmentService.viewSingleAppointment(appointment_id);
+            if (appointment.isPresent()) {
+                return ResponseEntity.ok(appointment);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Appointment not found for ID: " + appointment_id);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error retrieving appointment: " + e.getMessage());
+        }
     }
 
     @GetMapping("/admin/{appointment_id}")

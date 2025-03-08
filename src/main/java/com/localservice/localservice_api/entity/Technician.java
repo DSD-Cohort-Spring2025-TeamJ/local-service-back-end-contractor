@@ -1,10 +1,12 @@
 package com.localservice.localservice_api.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import java.util.List;
+import java.util.Map;
 
 @Data
 @Entity
@@ -16,5 +18,9 @@ public class Technician {
 
     private String name;
     private int hourly_rate;
-    private String reserved_time_slots;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
+    private Map<String, List<String>> reservedTimeSlots;
+
 }
