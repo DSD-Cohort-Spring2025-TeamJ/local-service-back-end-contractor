@@ -15,5 +15,16 @@ public class CorsConfig implements WebMvcConfigurer {
                 .allowedHeaders("*")
                 .allowCredentials(true)
                 .maxAge(3600);
+
+        // Allow Swagger UI and OpenAPI endpoints
+        registry.addMapping("/v3/api-docs/**")
+                .allowedOrigins("http://localhost:5173", "https://ourhostedclientwhenwedeploy.com")
+                .allowedMethods("GET")
+                .allowedHeaders("*");
+
+        registry.addMapping("/swagger-ui/**")
+                .allowedOrigins("http://localhost:5173", "https://ourhostedclientwhenwedeploy.com")
+                .allowedMethods("GET");
     }
+
 }
