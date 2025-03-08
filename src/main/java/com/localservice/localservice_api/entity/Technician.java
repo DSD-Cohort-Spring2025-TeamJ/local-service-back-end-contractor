@@ -16,5 +16,5 @@ public class Technician {
 
     private String name;
     private int hourly_rate;
-    private int reserved_time_slot;
+    private String reserved_time_slots;
 }

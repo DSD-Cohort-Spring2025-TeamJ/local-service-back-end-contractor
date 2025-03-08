@@ -1,6 +1,7 @@
 package com.localservice.localservice_api.controller;
 
 import com.localservice.localservice_api.entity.Appointment;
+import com.localservice.localservice_api.response.AdminAppointmentViewDTO;
 import com.localservice.localservice_api.service.AppointmentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,4 +38,16 @@ public class AppointmentController {
         Optional<Appointment> appointment = appointmentService.viewSingleAppointment(appointment_id);
         return ResponseEntity.ok(appointment);
     }
+
+    @GetMapping("/admin/{appointment_id}")
+    public ResponseEntity<?> viewAllAppointmentsAdmin (@PathVariable Long appointment_id) {
+        try {
+            AdminAppointmentViewDTO appointment = appointmentService.viewAdminViewAppointment(appointment_id);
+            return ResponseEntity.ok(appointment);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error retrieving admin appointment view: " + e.getMessage());
+        }
+    }
+
 }

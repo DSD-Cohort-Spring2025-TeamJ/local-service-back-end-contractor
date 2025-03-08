@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "service_tech_relation")
+@Table(name = "service_technician_relation")
 public class ServiceTechnicianRelation {
 
     @EmbeddedId
