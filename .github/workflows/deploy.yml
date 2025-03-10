@@ -41,7 +41,10 @@ jobs:
             --region $AWS_REGION \
             --environment-name "Booking-app-env" \
             --option-settings "Namespace=aws:elasticbeanstalk:application:environment,OptionName=DB_URL,Value=${{ secrets.DB_URL }}" \
-            "Namespace=aws:elasticbeanstalk:application:environment,OptionName=DB_PASSWORD,Value=${{ secrets.DB_PASSWORD }}"
+            "Namespace=aws:elasticbeanstalk:application:environment,OptionName=DB_PASSWORD,Value=${{ secrets.DB_PASSWORD }}" \
+            "Namespace=aws:elasticbeanstalk:application:environment,OptionName=SMTP_USER,Value=${{ secrets.SMTP_USER }}" \
+            "Namespace=aws:elasticbeanstalk:application:environment,OptionName=SMTP_PWD,Value=${{ secrets.SMTP_PWD }}"
+
 
       - name: Wait for environment to be ready
         run: |

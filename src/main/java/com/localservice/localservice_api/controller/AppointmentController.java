@@ -1,9 +1,11 @@
 package com.localservice.localservice_api.controller;
 
+import com.localservice.localservice_api.constants.Constants;
 import com.localservice.localservice_api.dto.AppointmentRequestDto;
 import com.localservice.localservice_api.entity.Appointment;
 import com.localservice.localservice_api.response.AdminAppointmentViewDTO;
 import com.localservice.localservice_api.service.AppointmentService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -82,4 +84,19 @@ public class AppointmentController {
         }
     }
 
+    @PutMapping("/admin/{appointment_id}/{appointment_status}")
+    public ResponseEntity<?> updateAppointmentStatus(
+            @PathVariable Long appointment_id,
+            @PathVariable Constants appointment_status) {
+
+        try {
+            Appointment appointment = appointmentService.updateAppointmentStatus(appointment_id, appointment_status);
+            return ResponseEntity.ok(appointment);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error updating appointment: " + e.getMessage());
+        }
+    }
 }
