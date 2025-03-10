@@ -71,4 +71,15 @@ public class AppointmentController {
         }
     }
 
+    @PutMapping("/admin/{appointment_id}")
+    public ResponseEntity<?> updateItemInventoryForAppointment(@PathVariable Long appointment_id) {
+        try {
+            String message = appointmentService.updateItemInventoryAndNotify(appointment_id);
+            return ResponseEntity.ok(message);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error retrieving admin appointment view: " + e.getMessage());
+        }
+    }
+
 }

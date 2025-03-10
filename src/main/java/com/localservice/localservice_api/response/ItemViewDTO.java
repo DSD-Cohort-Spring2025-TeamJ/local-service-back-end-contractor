@@ -9,4 +9,5 @@ import lombok.Data;
 public class ItemViewDTO {
     private Item item;
     private int qty_needed;
+    private boolean isOutOfStock;
 }
