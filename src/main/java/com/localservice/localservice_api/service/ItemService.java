@@ -61,10 +61,6 @@ public class ItemService {
             try {
                 Item existingItem = itemRepository.findById(item.getItem_id())
                     .orElseThrow(() -> new EntityNotFoundException("Item not found with id: " + item.getItem_id()));
-                existingItem.setItem_name(item.getItem_name());
-                existingItem.setType(item.getType());
-                existingItem.setUnit_price(item.getUnit_price());
-                existingItem.setStock_qty(item.getStock_qty());
                 updateItem(existingItem.getItem_id(), existingItem);
                 res.getUpdated().add(item);
                 return item.getItem_id();
