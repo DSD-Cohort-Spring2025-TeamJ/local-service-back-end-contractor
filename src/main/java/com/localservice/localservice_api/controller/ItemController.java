@@ -56,7 +56,6 @@ public class ItemController {
  // Update an existing item
     @PutMapping("/updateMultiple")
     public ResponseEntity<MultipleUpdateResponseDto<Item>> updateItems(@RequestBody List<Item> items) {
-//    	itemService.updateMultipleItems(items);
          return ResponseEntity.ok(itemService.updateMultipleItems(items));
     }
 
