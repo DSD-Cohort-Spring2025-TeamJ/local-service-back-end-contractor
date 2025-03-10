@@ -12,7 +12,6 @@ import jakarta.mail.internet.MimeMessage;
 import jakarta.persistence.EntityNotFoundException;
 import com.localservice.localservice_api.response.AdminAppointmentViewDTO;
 import com.localservice.localservice_api.response.ItemViewDTO;
-import org.apache.tomcat.util.bcel.Const;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
