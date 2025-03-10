@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - ticket-22
+      - ticket-37
 
 jobs:
   deploy:
@@ -21,39 +21,32 @@ jobs:
           java-version: '17'
 
       - name: Build application
-        run: |
-          mvn clean package
+        run: mvn clean package
 
-      - name: Set AWS credentials
+      - name: Verify JAR exists
         run: |
-          # Configure AWS CLI with the AWS credentials from GitHub Secrets
-          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws configure set region us-east-1
+          if [ ! -f target/localservice-api-0.0.1-SNAPSHOT.jar ]; then
+            echo "Build failed: JAR file not found!"
+            exit 1
+          fi
+
+      - name: Create environment variables JSON
+        run: |
+          cat <<EOF > eb-options.json
+          [
+            {"Namespace": "aws:elasticbeanstalk:application:environment", "OptionName": "DB_URL", "Value": "${{ secrets.DB_URL }}"},
+            {"Namespace": "aws:elasticbeanstalk:application:environment", "OptionName": "DB_PASSWORD", "Value": "${{ secrets.DB_PASSWORD }}"},
+            {"Namespace": "aws:elasticbeanstalk:application:environment", "OptionName": "SMTP_USER", "Value": "${{ secrets.SMTP_USER }}"},
+            {"Namespace": "aws:elasticbeanstalk:application:environment", "OptionName": "SMTP_PWD", "Value": "${{ secrets.SMTP_PWD }}"}
+          ]
+          EOF
 
       - name: Set environment variables for Elastic Beanstalk
         run: |
-          # Set AWS region
-          export AWS_REGION="us-east-1"
-          
-          # Use AWS CLI to update Elastic Beanstalk environment with DB_URL and DB_PASSWORD
           aws elasticbeanstalk update-environment \
-            --region $AWS_REGION \
+            --region "us-east-1" \
             --environment-name "Booking-app-env" \
-            --option-settings "Namespace=aws:elasticbeanstalk:application:environment,OptionName=DB_URL,Value=${{ secrets.DB_URL }}" \
-            "Namespace=aws:elasticbeanstalk:application:environment,OptionName=DB_PASSWORD,Value=${{ secrets.DB_PASSWORD }}" \
-            "Namespace=aws:elasticbeanstalk:application:environment,OptionName=SMTP_USER,Value=${{ secrets.SMTP_USER }}" \
-            "Namespace=aws:elasticbeanstalk:application:environment,OptionName=SMTP_PWD,Value=${{ secrets.SMTP_PWD }}"
-
-
-      - name: Wait for environment to be ready
-        run: |
-          export AWS_REGION="us-east-1" 
-          aws elasticbeanstalk describe-environments --environment-names "Booking-app-env" --region $AWS_REGION --query "Environments[0].Status" --output text
-          until [ "$(aws elasticbeanstalk describe-environments --environment-names "Booking-app-env" --region $AWS_REGION --query "Environments[0].Status" --output text)" == "Ready" ]; do
-            echo "Waiting for environment to be ready..."
-            sleep 30
-          done
+            --option-settings file://eb-options.json
 
       - name: Deploy to EB
         uses: einaregilsson/beanstalk-deploy@v21
