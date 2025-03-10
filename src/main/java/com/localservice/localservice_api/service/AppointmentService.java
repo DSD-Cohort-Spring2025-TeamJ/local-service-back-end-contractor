@@ -1,10 +1,10 @@
 package com.localservice.localservice_api.service;
 
+import com.localservice.localservice_api.constants.Constants;
 import com.localservice.localservice_api.dto.AppointmentRequestDto;
 import com.localservice.localservice_api.entity.Appointment;
 import com.localservice.localservice_api.entity.Technician;
 import com.localservice.localservice_api.entity.Item;
-import com.localservice.localservice_api.entity.Technician;
 import com.localservice.localservice_api.exceptions.ResourceNotFoundException;
 import com.localservice.localservice_api.repository.*;
 import jakarta.mail.MessagingException;
@@ -43,6 +43,23 @@ public class AppointmentService {
         this.serviceItemRelationRepository = serviceItemRelationRepository;
         this.serviceTechinicianRelationRepository = serviceTechinicianRelationRepository;
         this.itemRepository = itemRepository;
+    }
+
+    public Appointment updateAppointmentStatus(Long id, String incomingStatus) {
+        Constants status;
+        try {
+            status = Constants.valueOf(incomingStatus.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid status provided: " + incomingStatus +
+                    " Allowed values: PENDING, ASSIGNED, COMPLETED, REJECTED, ACTIVE.");
+        }
+
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Appointment not found"));
+
+        appointment.setStatus(status);
+
+        return appointmentRepository.save(appointment);
     }
 
     @Transactional
