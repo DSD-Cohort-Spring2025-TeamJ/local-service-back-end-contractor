@@ -12,6 +12,7 @@ import jakarta.mail.internet.MimeMessage;
 import jakarta.persistence.EntityNotFoundException;
 import com.localservice.localservice_api.response.AdminAppointmentViewDTO;
 import com.localservice.localservice_api.response.ItemViewDTO;
+import org.apache.tomcat.util.bcel.Const;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -45,7 +46,15 @@ public class AppointmentService {
         this.itemRepository = itemRepository;
     }
 
-    public Appointment updateAppointmentStatus(Long id, Constants status) {
+    public Appointment updateAppointmentStatus(Long id, String incomingStatus) {
+        Constants status;
+        try {
+            status = Constants.valueOf(incomingStatus.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid status provided: " + incomingStatus +
+                    " Allowed values: PENDING, ASSIGNED, COMPLETED, REJECTED, ACTIVE.");
+        }
+
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Appointment not found"));
 

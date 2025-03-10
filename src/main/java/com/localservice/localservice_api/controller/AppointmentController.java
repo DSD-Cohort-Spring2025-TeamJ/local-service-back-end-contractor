@@ -90,17 +90,8 @@ public class AppointmentController {
             @PathVariable String appointment_status) {
 
         try {
-            Constants status;
-            try {
-                status = Constants.valueOf(appointment_status.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                return ResponseEntity.badRequest()
-                        .body("Invalid status provided: " + appointment_status + " Allowed values: PENDING, ASSIGNED, COMPLETED, REJECTED, ACTIVE.");
-            }
-            Appointment appointment = appointmentService.updateAppointmentStatus(appointment_id, status);
+            Appointment appointment = appointmentService.updateAppointmentStatus(appointment_id, appointment_status);
             return ResponseEntity.ok(appointment);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error updating appointment: " + e.getMessage());
