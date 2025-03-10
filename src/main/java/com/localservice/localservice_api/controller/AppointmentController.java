@@ -87,10 +87,17 @@ public class AppointmentController {
     @PutMapping("/admin/{appointment_id}/{appointment_status}")
     public ResponseEntity<?> updateAppointmentStatus(
             @PathVariable Long appointment_id,
-            @PathVariable Constants appointment_status) {
+            @PathVariable String appointment_status) {
 
         try {
-            Appointment appointment = appointmentService.updateAppointmentStatus(appointment_id, appointment_status);
+            Constants status;
+            try {
+                status = Constants.valueOf(appointment_status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.badRequest()
+                        .body("Invalid status provided: " + appointment_status + " Allowed values: PENDING, ASSIGNED, COMPLETED, REJECTED, ACTIVE.");
+            }
+            Appointment appointment = appointmentService.updateAppointmentStatus(appointment_id, status);
             return ResponseEntity.ok(appointment);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
