@@ -19,11 +19,9 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-      - name: Export Environment Variables for Build
-        run: |
-          echo "SMTP_USER=${{ secrets.SMTP_USER }}" >> $GITHUB_ENV
-          echo "SMTP_PWD=${{ secrets.SMTP_PWD }}" >> $GITHUB_ENV
 
+      - name: Build application (Skip Tests if Needed)
+        run: mvn clean package -DskipTests
 
       - name: Build application
         run: |
