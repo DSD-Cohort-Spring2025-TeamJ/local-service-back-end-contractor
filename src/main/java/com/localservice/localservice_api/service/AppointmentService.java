@@ -197,7 +197,7 @@ public class AppointmentService {
 
             javaMailSender.send(message);
         } catch (MessagingException e) {
-            throw new RuntimeException("Failed to send out-of-stock email: " + e.getMessage(), e);
+            throw new RuntimeException("Failed to send status email: " + e.getMessage(), e);
         }
     }
 
