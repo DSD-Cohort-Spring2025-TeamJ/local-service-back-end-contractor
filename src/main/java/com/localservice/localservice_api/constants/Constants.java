@@ -5,5 +5,6 @@ public enum Constants {
     ASSIGNED,
     COMPLETED,
     REJECTED,
-    ACTIVE
+    ACTIVE,
+    ACCEPTED
 }

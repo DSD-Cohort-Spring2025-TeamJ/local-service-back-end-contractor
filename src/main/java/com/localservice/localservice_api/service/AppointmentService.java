@@ -49,7 +49,7 @@ public class AppointmentService {
         Constants status;
         try {
             status = Constants.valueOf(incomingStatus.toUpperCase());
-            if (incomingStatus.equals("ACCEPTED")) {
+            if (status == Constants.ACCEPTED) {
                 sendClientAcceptedEmail(id);
             }
         } catch (IllegalArgumentException e) {
