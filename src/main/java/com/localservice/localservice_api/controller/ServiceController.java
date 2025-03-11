@@ -1,16 +1,24 @@
 package com.localservice.localservice_api.controller;
 
-import com.localservice.localservice_api.dto.ServiceTechnicianDto;
-import com.localservice.localservice_api.entity.Service;
-import com.localservice.localservice_api.service.ServiceService;
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.localservice.localservice_api.dto.MultipleUpdateResponseDto;
+import com.localservice.localservice_api.dto.ServiceTechnicianDto;
+import com.localservice.localservice_api.entity.Service;
+import com.localservice.localservice_api.service.ServiceService;
+
+import jakarta.persistence.EntityNotFoundException;
 
 @RestController
 @RequestMapping("/api/v1/services")
@@ -20,6 +28,40 @@ public class ServiceController {
 
     public ServiceController(ServiceService serviceService) {
         this.serviceService = serviceService;
+    }
+    
+ // Create a new item
+    @PostMapping
+    public Service createItem(@RequestBody Service service) {
+        return serviceService.createService(service);
+    }
+
+    // Retrieve an item by ID
+    @GetMapping("/{serviceId}")
+    public ResponseEntity<Service> getItemById(@PathVariable long serviceId) {
+        return serviceService.getServiceById(serviceId)
+                .map(ResponseEntity::ok)
+                .orElseThrow(() -> new EntityNotFoundException("Service not found  with ID : " + serviceId));
+    }
+
+    // Update an existing item
+    @PutMapping("/{serviceId}")
+    public ResponseEntity<Service> updateItem(@PathVariable long serviceId, @RequestBody Service updatedService) {
+            Service updated = serviceService.updateService(serviceId, updatedService);
+            return ResponseEntity.ok(updated);
+    }
+    
+ // Update an existing item
+    @PutMapping("/updateMultiple")
+    public ResponseEntity<MultipleUpdateResponseDto<Service>> updateItems(@RequestBody List<Service> services) {
+         return ResponseEntity.ok(serviceService.updateMultipleServices(services));
+    }
+
+    // Delete an item by ID
+    @DeleteMapping("/{serviceId}")
+    public ResponseEntity<?> deleteItem(@PathVariable long serviceId) {
+        serviceService.deleteService(serviceId);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping

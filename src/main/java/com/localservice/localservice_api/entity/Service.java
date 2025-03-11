@@ -8,7 +8,7 @@ import lombok.Data;
 public class Service {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long service_id;
 
     private String service_name;
