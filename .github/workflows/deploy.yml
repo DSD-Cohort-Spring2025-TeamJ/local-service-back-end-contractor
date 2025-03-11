@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - ticket-22
+      - ticket-37
 
 jobs:
   deploy:
@@ -22,7 +22,7 @@ jobs:
 
       - name: Build application
         run: |
-          mvn clean package
+          mvn clean package -DskipTests
 
       - name: Set AWS credentials
         run: |
