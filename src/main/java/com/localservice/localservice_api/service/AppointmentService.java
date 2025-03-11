@@ -49,6 +49,9 @@ public class AppointmentService {
         Constants status;
         try {
             status = Constants.valueOf(incomingStatus.toUpperCase());
+            if (incomingStatus.equals("ACCEPTED")) {
+                sendClientAcceptedEmail(id);
+            }
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid status provided: " + incomingStatus +
                     " Allowed values: PENDING, ASSIGNED, COMPLETED, REJECTED, ACTIVE.");
@@ -176,6 +179,28 @@ public class AppointmentService {
         }
     }
 
+    private void sendClientAcceptedEmail(Long appointmentId) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + appointmentId));
+        String email = appointment.getClient_email();
+
+        String emailBody = generateClientAcceptedEmailBody(appointment);
+
+        try {
+            MimeMessage message = javaMailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+            helper.setFrom("pragmatic_plumber@gmail.com");
+            helper.setTo(email);
+            helper.setSubject("Your appointment was accepted! " + appointmentId);
+            helper.setText(emailBody, true);
+
+            javaMailSender.send(message);
+        } catch (MessagingException e) {
+            throw new RuntimeException("Failed to send out-of-stock email: " + e.getMessage(), e);
+        }
+    }
+
     private String generateEmailBody(Appointment appointment) {
         return "<html><body>" +
                 "<h2>Appointment Details</h2>" +
@@ -187,6 +212,22 @@ public class AppointmentService {
                 "<p><strong>Issue Description:</strong> " + appointment.getIssue_description() + "</p>" +
                 "<p><strong>Estimated Time:</strong> " + appointment.getEstimated_time() + "</p>" +
                 "<p><strong>Status:</strong> Items Out of Stock</p>" +
+                "<br><p>Thank you,</p>" +
+                "<p>Your Pragmatic Plumber Team</p>" +
+                "</body></html>";
+    }
+
+    private String generateClientAcceptedEmailBody(Appointment appointment) {
+        return "<html><body>" +
+                "<h2>Appointment Details</h2>" +
+                "<p><strong>Appointment ID:</strong> " + appointment.getAppointment_id() + "</p>" +
+                "<p><strong>Client Name:</strong> " + appointment.getClient_name() + "</p>" +
+                "<p><strong>Client Phone:</strong> " + appointment.getClient_phone() + "</p>" +
+                "<p><strong>Start Time:</strong> " + appointment.getStart_time() + "</p>" +
+                "<p><strong>End Time:</strong> " + appointment.getEnd_time() + "</p>" +
+                "<p><strong>Issue Description:</strong> " + appointment.getIssue_description() + "</p>" +
+                "<p><strong>Estimated Time:</strong> " + appointment.getEstimated_time() + "</p>" +
+                "<p><strong>Status:</strong></p>" + appointment.getStatus() +
                 "<br><p>Thank you,</p>" +
                 "<p>Your Pragmatic Plumber Team</p>" +
                 "</body></html>";
