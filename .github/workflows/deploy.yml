@@ -24,6 +24,9 @@ jobs:
         run: |
           mvn clean package -DskipTests
 
+      - name: Make postdeploy script executable
+        run: chmod +x .platform/hooks/postdeploy/01_ssl_setup.sh
+
       - name: Set AWS credentials
         run: |
           # Configure AWS CLI with the AWS credentials from GitHub Secrets
