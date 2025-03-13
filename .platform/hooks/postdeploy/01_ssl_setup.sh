@@ -3,7 +3,7 @@
 cp -f /var/app/current/.platform/nginx/conf.d/https_redirect.conf /etc/nginx/conf.d/
 systemctl restart nginx
 
-chmod +x .platform/hooks/postdeploy/01_copy_nginx.sh
+chmod +x .platform/hooks/postdeploy/01_ssl_setup.sh
 
 echo "Installing Certbot..."
 sudo yum install -y certbot
