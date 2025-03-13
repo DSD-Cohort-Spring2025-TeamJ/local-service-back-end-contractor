@@ -1,7 +1,11 @@
 #!/bin/bash
 
-cp -f /var/app/current/.platform/nginx/conf.d/https_redirect.conf /etc/nginx/conf.d/
+# Ensure Nginx HTTPS config is in the right place
+cp -f /var/app/current/.platform/nginx/conf.d/https_redirect.conf /var/proxy/staging/nginx/conf.d/
+
+# Restart Nginx to apply the changes
 systemctl restart nginx
+
 
 chmod +x .platform/hooks/postdeploy/01_ssl_setup.sh
 
