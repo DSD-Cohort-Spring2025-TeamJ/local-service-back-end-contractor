@@ -38,6 +38,10 @@ jobs:
           unzip -l my-app.zip | grep "https_redirect.conf" || echo "NGINX CONFIG MISSING"
           unzip -l my-app.zip | grep "nginx.config" || echo "EBEXTENSIONS CONFIG MISSING"
 
+      - name: Zip source code for deployment
+        run: zip -r my-app.zip . -x "*.git*" -x "*.github*" -x "target/*"
+
+
       - name: Make postdeploy script executable
         run: chmod +x .platform/hooks/postdeploy/01_ssl_setup.sh
 
