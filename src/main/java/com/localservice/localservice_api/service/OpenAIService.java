@@ -2,6 +2,9 @@ package com.localservice.localservice_api.service;
 
 import com.localservice.localservice_api.dto.ServiceRequest;
 import com.localservice.localservice_api.dto.ServiceResponse;
+import com.localservice.localservice_api.entity.PromptConfig;
+import com.localservice.localservice_api.repository.PromptConfigRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -9,14 +12,14 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestClient;
 
-import java.util.List;
+
 import java.util.Map;
 
 @Service
 public class OpenAIService {
     private final RestClient restClient;
 
-    @Value("${openai.api.key}")  // ✅ Set API Key in `application.properties`
+    @Value("${openai.api.key}")
     private String apiKey;
 
     private static final String API_URL = "https://api.openai.com/v1/chat/completions";
@@ -25,23 +28,19 @@ public class OpenAIService {
         this.restClient = RestClient.builder().baseUrl(API_URL).build();
     }
 
+    @Autowired
+    private PromptConfigRepository promptConfigRepository;
+
     public ServiceResponse classifyService(ServiceRequest request) {
-        // Create the OpenAI prompt
 
-        String prompt = """
-    You are a service classification assistant that categorizes customer issues into one of the following categories: 
-    - Plumbing: Issues related to water pipes, leaks, faucets, drainage, toilets, and water heaters.
-    - Electrical: Problems with wiring, power outages, circuit breakers, electrical panels, and outlets.
-    - HVAC: Air conditioning, heating, ventilation, and thermostat-related problems.
-    - Roofing: Leaks, missing shingles, damaged roofs, or water seepage from the ceiling.
-    - General Maintenance: Any other issues like carpentry, painting, door repairs, or unknown issues.
+        PromptConfig latestPrompt = promptConfigRepository.findLatestPrompt();
 
-    Classify the following issue into one of these categories. Be precise and do not assume everything is Plumbing. 
+        if (latestPrompt == null) {
+            return new ServiceResponse("Error: No prompt found in database.");
+        }
 
-    Issue: "%s"
-
-    Return only the category name.
-""".formatted(request.getIssueDescription());
+        // Format the prompt dynamically
+        String prompt = String.format(latestPrompt.getPromptText(), request.getIssueDescription());
 
         // Construct the API request
         Map<String, Object> requestBody = Map.of(
