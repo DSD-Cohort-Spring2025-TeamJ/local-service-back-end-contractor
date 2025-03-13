@@ -1,5 +1,10 @@
 #!/bin/bash
 
+cp -f /var/app/current/.platform/nginx/conf.d/https_redirect.conf /etc/nginx/conf.d/
+systemctl restart nginx
+
+chmod +x .platform/hooks/postdeploy/01_copy_nginx.sh
+
 echo "Installing Certbot..."
 sudo yum install -y certbot
 
@@ -20,3 +25,4 @@ sudo crontab -l | grep -v 'certbot renew' | sudo crontab -
 echo "0 2 * * * certbot renew --quiet --post-hook 'sudo systemctl restart nginx'" | sudo crontab -
 
 echo "SSL setup and auto-renewal configured!"
+
