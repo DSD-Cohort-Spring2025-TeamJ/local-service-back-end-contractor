@@ -24,6 +24,20 @@ jobs:
         run: |
           mvn clean package -DskipTests
 
+      - name: Package Application with Nginx Config
+        run: |
+          echo "Checking .platform and .ebextensions presence..."
+          ls -R .platform/
+          ls -R .ebextensions/
+          
+          echo "Zipping project with platform and ebextensions..."
+          zip -r my-app.zip . -x "*.git*"
+          zip -r my-app.zip .platform/ .ebextensions/
+          
+          echo "Validating inclusion in ZIP:"
+          unzip -l my-app.zip | grep "https_redirect.conf" || echo "NGINX CONFIG MISSING"
+          unzip -l my-app.zip | grep "nginx.config" || echo "EBEXTENSIONS CONFIG MISSING"
+
       - name: Make postdeploy script executable
         run: chmod +x .platform/hooks/postdeploy/01_ssl_setup.sh
 
