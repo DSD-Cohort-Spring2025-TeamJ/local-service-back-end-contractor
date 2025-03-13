@@ -41,6 +41,8 @@ public class OpenAIService {
 
         // Format the prompt dynamically
         String prompt = String.format(latestPrompt.getPromptText(), request.getIssueDescription());
+      public ServiceResponse classifyService(ServiceRequest request) {
+        
 
         // Construct the API request
         Map<String, Object> requestBody = Map.of(
