@@ -27,7 +27,7 @@ jobs:
       - name: Ensure custom NGINX config is in the deployment package
         run: |
           zip -r my-app.zip . -x "*.git*"
-          unzip -l my-app.zip | grep "custom.conf"
+          unzip -l my-app.zip | grep "https_redirect.conf"
           unzip -l my-app.zip | grep "nginx.config"
 
       - name: Make postdeploy script executable
