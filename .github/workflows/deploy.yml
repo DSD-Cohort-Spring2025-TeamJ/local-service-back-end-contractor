@@ -45,6 +45,8 @@ jobs:
             "Namespace=aws:elasticbeanstalk:application:environment,OptionName=SMTP_USER,Value=${{ secrets.SMTP_USER }}" \
             "Namespace=aws:elasticbeanstalk:application:environment,OptionName=SMTP_PWD,Value=${{ secrets.SMTP_PWD }}"
 
+      - name: Make postdeploy script executable
+        run: chmod +x .platform/hooks/postdeploy/01_setup_ssl.sh
 
       - name: Wait for environment to be ready
         run: |
