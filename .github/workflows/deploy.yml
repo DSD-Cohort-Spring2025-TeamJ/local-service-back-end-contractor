@@ -24,13 +24,6 @@ jobs:
         run: |
           mvn clean package -DskipTests
 
-      - name: Zip source code for deployment
-        run: zip -r my-app.zip . -x "*.git*" -x "*.github*" -x "target/*"
-
-
-      - name: Make postdeploy script executable
-        run: chmod +x .platform/hooks/postdeploy/01_ssl_setup.sh
-
       - name: Set AWS credentials
         run: |
           # Configure AWS CLI with the AWS credentials from GitHub Secrets
