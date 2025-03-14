@@ -10,8 +10,7 @@ fi
 sudo dnf update -y
 
 # Install Certbot if not installed
-if ! command -v certbot &> /dev/null
-then
+if ! command -v certbot &> /dev/null; then
     sudo dnf install -y snapd
     sudo systemctl enable --now snapd.socket
     sudo ln -s /var/lib/snapd/snap /snap
@@ -34,7 +33,7 @@ sudo chmod 644 /etc/letsencrypt/live/booking-app.us-east-1.elasticbeanstalk.com/
 sudo chmod 644 /etc/letsencrypt/live/booking-app.us-east-1.elasticbeanstalk.com/privkey.pem
 
 # Enable auto-renewal using systemd
-sudo bash -c 'cat <<EOF > /etc/systemd/system/certbot-renew.service
+cat << EOF | sudo tee /etc/systemd/system/certbot-renew.service > /dev/null
 [Unit]
 Description=Renew Let's Encrypt certificates
 Wants=network-online.target
@@ -43,9 +42,9 @@ After=network-online.target
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/certbot renew --quiet
-EOF'
+EOF
 
-sudo bash -c 'cat <<EOF > /etc/systemd/system/certbot-renew.timer
+cat << EOF | sudo tee /etc/systemd/system/certbot-renew.timer > /dev/null
 [Unit]
 Description=Run certbot-renew twice daily
 Wants=network-online.target
@@ -57,7 +56,7 @@ Persistent=true
 
 [Install]
 WantedBy=timers.target
-EOF'
+EOF
 
 # Reload systemd and enable timer
 sudo systemctl daemon-reload
