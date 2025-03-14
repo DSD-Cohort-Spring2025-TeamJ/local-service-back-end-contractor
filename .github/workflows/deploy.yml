@@ -47,9 +47,6 @@ jobs:
 
       - name: Make postdeploy script executable
         run: chmod +x .platform/hooks/postdeploy/01_setup_ssl.sh
-
-      - name: Make postdeploy script for nginx
-        run: chmod +x .platform/hooks/postdeploy/01_copy_nginx.sh
         
       - name: Wait for environment to be ready
         run: |
