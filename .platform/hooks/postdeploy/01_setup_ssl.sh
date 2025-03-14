@@ -1,22 +1,67 @@
 #!/bin/bash
 
-# Install certbot if not already installed
+# Ensure script runs as root
+if [[ $EUID -ne 0 ]]; then
+    echo "This script must be run as root"
+    exit 1
+fi
+
+# Update package lists
+sudo dnf update -y
+
+# Install Certbot if not installed
 if ! command -v certbot &> /dev/null
 then
-    sudo yum install -y certbot
+    sudo dnf install -y snapd
+    sudo systemctl enable --now snapd.socket
+    sudo ln -s /var/lib/snapd/snap /snap
+    sudo snap install core
+    sudo snap refresh core
+    sudo snap install --classic certbot
+    sudo ln -s /snap/bin/certbot /usr/bin/certbot
 fi
 
 # Stop Nginx to free port 80 for Certbot verification
 sudo systemctl stop nginx
 
-# Obtain/Renew Let's Encrypt Certificate
-sudo certbot certonly --standalone --noninteractive --agree-tos \
+# Request Let's Encrypt certificate (auto-configures Nginx)
+sudo certbot --nginx --noninteractive --agree-tos \
   --email your-email@example.com \
   -d booking-app.us-east-1.elasticbeanstalk.com
 
-# Ensure correct permissions for the SSL cert files
+# Ensure correct permissions for SSL certs
 sudo chmod 644 /etc/letsencrypt/live/booking-app.us-east-1.elasticbeanstalk.com/fullchain.pem
 sudo chmod 644 /etc/letsencrypt/live/booking-app.us-east-1.elasticbeanstalk.com/privkey.pem
 
-# Restart Nginx with the new certificate
+# Enable auto-renewal using systemd
+sudo bash -c 'cat <<EOF > /etc/systemd/system/certbot-renew.service
+[Unit]
+Description=Renew Let's Encrypt certificates
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/certbot renew --quiet
+EOF'
+
+sudo bash -c 'cat <<EOF > /etc/systemd/system/certbot-renew.timer
+[Unit]
+Description=Run certbot-renew twice daily
+Wants=network-online.target
+After=network-online.target
+
+[Timer]
+OnCalendar=*-*-* 00,12:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF'
+
+# Reload systemd and enable timer
+sudo systemctl daemon-reload
+sudo systemctl enable --now certbot-renew.timer
+
+# Restart Nginx
 sudo systemctl start nginx
