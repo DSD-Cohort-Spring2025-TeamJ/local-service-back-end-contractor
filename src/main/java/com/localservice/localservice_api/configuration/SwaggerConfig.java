@@ -19,7 +19,7 @@ public class SwaggerConfig {
                         .description("API documentation for Local Contract Service"))
                 .servers(List.of(
                     new Server()
-                        .url("https://app.battleoptionsapi.com/service-provider")
+                        .url("https://booking-app.us-east-1.elasticbeanstalk.com/service-provider")
                         .description("AWS Elastic Beanstalk (Production)")
         ));
     }
