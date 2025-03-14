@@ -1,16 +1,14 @@
 #!/bin/bash
 
-# Ensure script runs as root
-if [[ $EUID -ne 0 ]]; then
-    echo "This script must be run as root"
-    exit 1
-fi
+# Exit immediately if a command fails
+set -e
 
 # Update package lists
 sudo dnf update -y
 
-# Install Certbot if not installed
+# Install Certbot via Snap if not already installed
 if ! command -v certbot &> /dev/null; then
+    echo "Installing Snap & Certbot..."
     sudo dnf install -y snapd
     sudo systemctl enable --now snapd.socket
     sudo ln -s /var/lib/snapd/snap /snap
@@ -18,21 +16,27 @@ if ! command -v certbot &> /dev/null; then
     sudo snap refresh core
     sudo snap install --classic certbot
     sudo ln -s /snap/bin/certbot /usr/bin/certbot
+else
+    echo "Certbot is already installed."
 fi
 
 # Stop Nginx to free port 80 for Certbot verification
+echo "Stopping Nginx..."
 sudo systemctl stop nginx
 
 # Request Let's Encrypt certificate (auto-configures Nginx)
+echo "Requesting SSL certificate from Let's Encrypt..."
 sudo certbot --nginx --noninteractive --agree-tos \
-  --email your-email@example.com \
+  --email joshuaow@gmail.com \
   -d booking-app.us-east-1.elasticbeanstalk.com
 
 # Ensure correct permissions for SSL certs
+echo "Setting correct permissions for SSL certificates..."
 sudo chmod 644 /etc/letsencrypt/live/booking-app.us-east-1.elasticbeanstalk.com/fullchain.pem
 sudo chmod 644 /etc/letsencrypt/live/booking-app.us-east-1.elasticbeanstalk.com/privkey.pem
 
-# Enable auto-renewal using systemd
+# Set up auto-renewal systemd timer for Certbot
+echo "Configuring auto-renewal..."
 cat << EOF | sudo tee /etc/systemd/system/certbot-renew.service > /dev/null
 [Unit]
 Description=Renew Let's Encrypt certificates
@@ -59,8 +63,12 @@ WantedBy=timers.target
 EOF
 
 # Reload systemd and enable timer
+echo "Enabling systemd renewal timer..."
 sudo systemctl daemon-reload
 sudo systemctl enable --now certbot-renew.timer
 
 # Restart Nginx
+echo "Restarting Nginx..."
 sudo systemctl start nginx
+
+echo "SSL setup completed successfully!"
