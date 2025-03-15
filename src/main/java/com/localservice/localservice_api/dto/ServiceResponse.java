@@ -9,4 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ServiceResponse {
     private String category;
+    private double estimatedTime;
 }
