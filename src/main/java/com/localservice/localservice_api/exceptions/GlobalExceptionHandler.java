@@ -1,6 +1,9 @@
 package com.localservice.localservice_api.exceptions;
 
 import jakarta.persistence.EntityNotFoundException;
+
+import java.time.format.DateTimeParseException;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -17,6 +20,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<String> handleNotFound(EntityNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
+    
+    @ExceptionHandler(DateTimeParseException.class) 
+    public ResponseEntity<String> handleInvalidDateFormatRequest(DateTimeParseException e){
+    	return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
