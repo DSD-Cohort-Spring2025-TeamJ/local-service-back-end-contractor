@@ -1,5 +1,6 @@
 package com.localservice.localservice_api.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.localservice.localservice_api.dto.ServiceRequest;
 import com.localservice.localservice_api.dto.ServiceResponse;
 import com.localservice.localservice_api.entity.PromptConfig;
@@ -36,7 +37,7 @@ public class OpenAIService {
         PromptConfig latestPrompt = promptConfigRepository.findLatestPrompt();
 
         if (latestPrompt == null) {
-            return new ServiceResponse("Error: No prompt found in database.");
+            return new ServiceResponse("Error: No prompt found in database.",0.0);
         }
 
         // Format the prompt dynamically
@@ -50,7 +51,7 @@ public class OpenAIService {
                         Map.of("role", "user", "content", prompt)
                 },
                 "temperature", 0.3,
-                "max_tokens", 50
+                "max_tokens", 100
         );
 
         try {
@@ -66,24 +67,45 @@ public class OpenAIService {
             if (response != null && response.containsKey("choices")) {
                 Map<String, Object> choice = (Map<String, Object>) ((java.util.List<?>) response.get("choices")).get(0);
                 Map<String, String> message = (Map<String, String>) choice.get("message");
-                String category = message.get("content").trim();
+                String jsonResponse = message.get("content").trim();
 
-                return new ServiceResponse(category);
+
+                // Convert the JSON response to Java Object
+                ObjectMapper objectMapper = new ObjectMapper();
+                Map<String, Object> parsedResponse = objectMapper.readValue(jsonResponse, Map.class);
+
+                String plumbingService = (String) parsedResponse.get("category");
+
+                Object estimatedTimeObj = parsedResponse.get("estimatedTime");
+                double estimatedTime = 0.0; // Default value in case of error
+
+                if (estimatedTimeObj instanceof Number) {
+                    estimatedTime = ((Number) estimatedTimeObj).doubleValue();
+                } else if (estimatedTimeObj instanceof String) {
+                    try {
+                        estimatedTime = Double.parseDouble((String) estimatedTimeObj);
+                    } catch (NumberFormatException e) {
+                        estimatedTime = 0.0; // If parsing fails, fallback to default
+                    }
+                }
+
+                return new ServiceResponse(plumbingService, estimatedTime);
             } else {
-                return new ServiceResponse("Error: Unexpected response from OpenAI");
+                return new ServiceResponse("Error: Unexpected response from OpenAI", 0.0);
             }
 
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             // Handle HTTP errors (e.g., 401 Unauthorized, 429 Rate Limit)
             if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
-                return new ServiceResponse("Error: Invalid API Key");
+                return new ServiceResponse("Error: Invalid API Key", 0.0);
             } else if (e.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
-                return new ServiceResponse("Error: Rate limit exceeded. Try again later.");
+                return new ServiceResponse("Error: Rate limit exceeded. Try again later.", 0.0);
             } else {
-                return new ServiceResponse("Error: " + e.getMessage());
+                return new ServiceResponse("Error: " + e.getMessage(),
+                        0.0);
             }
         } catch (Exception e) {
-            return new ServiceResponse("Error: " + e.getMessage());
+            return new ServiceResponse("Error: " + e.getMessage(), 0.0);
         }
     }
 
