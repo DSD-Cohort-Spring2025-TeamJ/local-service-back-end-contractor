@@ -1,235 +1,281 @@
 package com.localservice.localservice_api.service;
 
-import com.localservice.localservice_api.constants.Constants;
-import com.localservice.localservice_api.dto.AppointmentRequestDto;
-import com.localservice.localservice_api.entity.Appointment;
-import com.localservice.localservice_api.entity.Technician;
-import com.localservice.localservice_api.entity.Item;
-import com.localservice.localservice_api.exceptions.ResourceNotFoundException;
-import com.localservice.localservice_api.repository.*;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import jakarta.persistence.EntityNotFoundException;
-import com.localservice.localservice_api.response.AdminAppointmentViewDTO;
-import com.localservice.localservice_api.response.ItemViewDTO;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import com.localservice.localservice_api.constants.Constants;
+import com.localservice.localservice_api.dto.AppointmentRequestDto;
+import com.localservice.localservice_api.entity.Appointment;
+import com.localservice.localservice_api.entity.Item;
+import com.localservice.localservice_api.entity.Technician;
+import com.localservice.localservice_api.exceptions.ResourceNotFoundException;
+import com.localservice.localservice_api.repository.AppointmentRepository;
+import com.localservice.localservice_api.repository.ItemRepository;
+import com.localservice.localservice_api.repository.ServiceItemRelationRepository;
+import com.localservice.localservice_api.repository.ServiceRepository;
+import com.localservice.localservice_api.repository.ServiceTechinicianRelationRepository;
+import com.localservice.localservice_api.repository.TechnicianRepository;
+import com.localservice.localservice_api.response.AdminAppointmentViewDTO;
+import com.localservice.localservice_api.response.ItemViewDTO;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class AppointmentService {
 
-    private final AppointmentRepository appointmentRepository;
-    private final TechnicianRepository technicianRepository;
-    private final ServiceRepository serviceRepository;
-    private final ServiceItemRelationRepository serviceItemRelationRepository;
-    private final ServiceTechinicianRelationRepository serviceTechinicianRelationRepository;
-    private final ItemRepository itemRepository;
-    @Autowired
-    private JavaMailSender javaMailSender;
+	private final AppointmentRepository appointmentRepository;
+	private final TechnicianRepository technicianRepository;
+	private final ServiceRepository serviceRepository;
+	private final ServiceItemRelationRepository serviceItemRelationRepository;
+	private final ServiceTechinicianRelationRepository serviceTechinicianRelationRepository;
+	private final ItemRepository itemRepository;
+	@Autowired
+	private JavaMailSender javaMailSender;
 
-    public AppointmentService(AppointmentRepository appointmentRepository, TechnicianRepository technicianRepository, ServiceRepository serviceRepository, ServiceItemRelationRepository serviceItemRelationRepository, ServiceTechinicianRelationRepository serviceTechinicianRelationRepository, ItemRepository itemRepository) {
-        this.appointmentRepository = appointmentRepository;
-        this.technicianRepository = technicianRepository;
-        this.serviceRepository = serviceRepository;
-        this.serviceItemRelationRepository = serviceItemRelationRepository;
-        this.serviceTechinicianRelationRepository = serviceTechinicianRelationRepository;
-        this.itemRepository = itemRepository;
-    }
+	private static final String TARGETTED_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
 
-    public Appointment updateAppointmentStatus(Long id, String incomingStatus) {
-        Constants status;
-        try {
-            status = Constants.valueOf(incomingStatus.toUpperCase());
-            if (status == Constants.ACCEPTED) {
-                sendClientAcceptedEmail(id);
-            }
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid status provided: " + incomingStatus +
-                    " Allowed values: PENDING, ASSIGNED, COMPLETED, REJECTED, ACTIVE.");
-        }
+	public AppointmentService(AppointmentRepository appointmentRepository, TechnicianRepository technicianRepository,
+			ServiceRepository serviceRepository, ServiceItemRelationRepository serviceItemRelationRepository,
+			ServiceTechinicianRelationRepository serviceTechinicianRelationRepository, ItemRepository itemRepository) {
+		this.appointmentRepository = appointmentRepository;
+		this.technicianRepository = technicianRepository;
+		this.serviceRepository = serviceRepository;
+		this.serviceItemRelationRepository = serviceItemRelationRepository;
+		this.serviceTechinicianRelationRepository = serviceTechinicianRelationRepository;
+		this.itemRepository = itemRepository;
+	}
 
-        Appointment appointment = appointmentRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Appointment not found"));
+	public Appointment updateAppointmentStatus(Long id, String incomingStatus) {
+		Constants status;
+		try {
+			status = Constants.valueOf(incomingStatus.toUpperCase());
+			if (status == Constants.ACCEPTED) {
+				sendClientAcceptedEmail(id);
+			}
+		} catch (IllegalArgumentException e) {
+			throw new IllegalArgumentException("Invalid status provided: " + incomingStatus
+					+ " Allowed values: PENDING, ASSIGNED, COMPLETED, REJECTED, ACTIVE.");
+		}
 
-        appointment.setStatus(status);
+		Appointment appointment = appointmentRepository.findById(id)
+				.orElseThrow(() -> new EntityNotFoundException("Appointment not found"));
 
-        return appointmentRepository.save(appointment);
-    }
+		appointment.setStatus(status);
 
-    @Transactional
-    public Appointment createAppointment(AppointmentRequestDto request) {
-        com.localservice.localservice_api.entity.Service service = serviceRepository.findById(request.getService_id())
-                .orElseThrow(() -> new EntityNotFoundException("Service not found"));
+		return appointmentRepository.save(appointment);
+	}
 
-        Technician technician = technicianRepository.findById(request.getTech_id())
-                .orElseThrow(() -> new EntityNotFoundException("Technician not found"));
+	public Appointment updateAppointmentTimes(Long id, String startDateTime, String endDateTime) {
+		Appointment appointment = appointmentRepository.findById(id)
+				.orElseThrow(() -> new EntityNotFoundException("Appointment not found"));
+		if (Objects.nonNull(startDateTime) && !startDateTime.isBlank()) {
+			appointment.setStart_time(formatToDateTimestamp(startDateTime));
+		}
 
-        Appointment appointment = getAppointment(request, service, technician);
+		if (Objects.nonNull(endDateTime) && !endDateTime.isBlank()) {
+			appointment.setEnd_time(formatToDateTimestamp(endDateTime));
+		}
 
-        appointmentRepository.save(appointment);
+		return appointmentRepository.save(appointment);
+	}
 
-        Map<String, List<String>> reservedSlots = technician.getReservedTimeSlots();
-        reservedSlots.computeIfAbsent(request.getDate(), k -> new ArrayList<>()).add(request.getTime_slot());
-        technician.setReservedTimeSlots(reservedSlots);
-        technicianRepository.save(technician);
+	@Transactional
+	public Appointment createAppointment(AppointmentRequestDto request) {
+		com.localservice.localservice_api.entity.Service service = serviceRepository.findById(request.getService_id())
+				.orElseThrow(() -> new EntityNotFoundException("Service not found"));
 
-        return appointment;
-    }
+		Technician technician = technicianRepository.findById(request.getTech_id())
+				.orElseThrow(() -> new EntityNotFoundException("Technician not found"));
 
-    private static Appointment getAppointment(AppointmentRequestDto request, com.localservice.localservice_api.entity.Service service, Technician technician) {
-        Appointment appointment = new Appointment();
-        appointment.setService_id(service);
-        appointment.setClient_name(request.getName());
-        appointment.setClient_email(request.getEmail());
-        appointment.setClient_phone(request.getPhone());
-        appointment.setLocation(request.getAddress());
-        appointment.setIssue_description(request.getComment());
+		Appointment appointment = getAppointment(request, service, technician);
 
-        String assignedTechnicians = String.valueOf(technician.getTech_id());
-        appointment.setAssigned_technician_list(Collections.singletonList(assignedTechnicians));
-        return appointment;
-    }
+		appointmentRepository.save(appointment);
 
-    public List<Appointment> viewAllAppointments () {
-        return appointmentRepository.findAll();
-    }
+		Map<String, List<String>> reservedSlots = technician.getReservedTimeSlots();
+		reservedSlots.computeIfAbsent(request.getStartDateTime(), k -> new ArrayList<>()).add(request.getTime_slot());
+		technician.setReservedTimeSlots(reservedSlots);
+		technicianRepository.save(technician);
 
-    public Optional<Appointment> viewSingleAppointment (Long appointment_id) {
-        return appointmentRepository.findById(appointment_id);
-    }
+		return appointment;
+	}
 
-    public AdminAppointmentViewDTO viewAdminViewAppointment(Long appointmentId) {
+	private Appointment getAppointment(AppointmentRequestDto request,
+			com.localservice.localservice_api.entity.Service service, Technician technician) {
+		Appointment appointment = new Appointment();
+		appointment.setService_id(service);
+		appointment.setClient_name(request.getName());
+		appointment.setClient_email(request.getEmail());
+		appointment.setClient_phone(request.getPhone());
+		appointment.setLocation(request.getAddress());
+		appointment.setIssue_description(request.getComment());
 
-        Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + appointmentId));
+		String assignedTechnicians = String.valueOf(technician.getTech_id());
+		appointment.setAssigned_technician_list(Collections.singletonList(assignedTechnicians));
 
-        Long serviceId = appointment.getService_id().getService_id();
+		if (request.getStartDateTime() != null && !request.getStartDateTime().isBlank()) {
+			appointment.setStart_time(formatToDateTimestamp(request.getStartDateTime()));
+		}
 
-        List<Item> items = serviceItemRelationRepository.getItemsByService_id(serviceId);
+		if (service.getEstimated_time() != 0 && appointment.getStart_time() != null) {
+			appointment.setEnd_time(appointment.getStart_time().plusMinutes(service.getEstimated_time()));
+		}
+		return appointment;
+	}
 
-        List<ItemViewDTO> itemViews = items.stream()
-                .map(item -> {
-                    int qtyNeeded = serviceItemRelationRepository.getQtyNeededByItemid(item.getItem_id());
-                    boolean isOutOfStock = item.getStock_qty() < qtyNeeded;
-                    return new ItemViewDTO(item, qtyNeeded, isOutOfStock);
-                })
-                .collect(Collectors.toList());
+	public List<Appointment> viewAllAppointments() {
+		return appointmentRepository.findAll();
+	}
 
-        List<Technician> technicians = serviceTechinicianRelationRepository.getTechiciansByService_id(serviceId);
+	public Optional<Appointment> viewSingleAppointment(Long appointment_id) {
+		return appointmentRepository.findById(appointment_id);
+	}
 
-        return new AdminAppointmentViewDTO(appointment, technicians, itemViews);
-    }
+	public AdminAppointmentViewDTO viewAdminViewAppointment(Long appointmentId) {
 
-    public String updateItemInventoryAndNotify(Long appointment_id) throws MessagingException {
-        AdminAppointmentViewDTO adminAppointmentViewDTO = viewAdminViewAppointment(appointment_id);
-        List<ItemViewDTO> itemViewDTOList = adminAppointmentViewDTO.getItems();
-        boolean isOutOfStock = updateInventory(itemViewDTOList);
+		Appointment appointment = appointmentRepository.findById(appointmentId)
+				.orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + appointmentId));
 
-        if (!isOutOfStock) {
-            return "Invalid request";
-        }
+		Long serviceId = appointment.getService_id().getService_id();
 
-        sendOutOfStockEmail(appointment_id);
+		List<Item> items = serviceItemRelationRepository.getItemsByService_id(serviceId);
 
-        return "Inventory has been updated successfully";
-    }
+		List<ItemViewDTO> itemViews = items.stream().map(item -> {
+			int qtyNeeded = serviceItemRelationRepository.getQtyNeededByItemid(item.getItem_id());
+			boolean isOutOfStock = item.getStock_qty() < qtyNeeded;
+			return new ItemViewDTO(item, qtyNeeded, isOutOfStock);
+		}).collect(Collectors.toList());
 
-    private boolean updateInventory(List<ItemViewDTO> itemViewDTOList) {
-        boolean isOutOfStock = false;
+		List<Technician> technicians = serviceTechinicianRelationRepository.getTechiciansByService_id(serviceId);
 
-        for (ItemViewDTO itemViewDTO : itemViewDTOList) {
-            if (itemViewDTO.isOutOfStock()) {
-                Item item = itemViewDTO.getItem();
-                item.setStock_qty(itemViewDTO.getQty_needed());
-                itemRepository.save(item);
-                isOutOfStock = true;
-            }
-        }
-        return isOutOfStock;
-    }
+		return new AdminAppointmentViewDTO(appointment, technicians, itemViews);
+	}
 
+	public String updateItemInventoryAndNotify(Long appointment_id) throws MessagingException {
+		AdminAppointmentViewDTO adminAppointmentViewDTO = viewAdminViewAppointment(appointment_id);
+		List<ItemViewDTO> itemViewDTOList = adminAppointmentViewDTO.getItems();
+		boolean isOutOfStock = updateInventory(itemViewDTOList);
 
-    private void sendOutOfStockEmail(Long appointmentId) {
-        Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + appointmentId));
+		if (!isOutOfStock) {
+			return "Invalid request";
+		}
 
-        String emailBody = generateEmailBody(appointment);
+		sendOutOfStockEmail(appointment_id);
 
-        try {
-            MimeMessage message = javaMailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+		return "Inventory has been updated successfully";
+	}
 
-            helper.setFrom("pragmatic_plumber@gmail.com");
-            helper.setTo("service_provider@gmail.com");
-            helper.setSubject("Items out of stock for Appointment " + appointmentId);
-            helper.setText(emailBody, true);
+	private boolean updateInventory(List<ItemViewDTO> itemViewDTOList) {
+		boolean isOutOfStock = false;
 
-            javaMailSender.send(message);
-        } catch (MessagingException e) {
-            throw new RuntimeException("Failed to send out-of-stock email: " + e.getMessage(), e);
-        }
-    }
+		for (ItemViewDTO itemViewDTO : itemViewDTOList) {
+			if (itemViewDTO.isOutOfStock()) {
+				Item item = itemViewDTO.getItem();
+				item.setStock_qty(itemViewDTO.getQty_needed());
+				itemRepository.save(item);
+				isOutOfStock = true;
+			}
+		}
+		return isOutOfStock;
+	}
 
-    private void sendClientAcceptedEmail(Long appointmentId) {
-        Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + appointmentId));
-        String email = appointment.getClient_email();
+	private void sendOutOfStockEmail(Long appointmentId) {
+		Appointment appointment = appointmentRepository.findById(appointmentId)
+				.orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + appointmentId));
 
-        String emailBody = generateClientAcceptedEmailBody(appointment);
+		String emailBody = generateEmailBody(appointment);
 
-        try {
-            MimeMessage message = javaMailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+		try {
+			MimeMessage message = javaMailSender.createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
-            helper.setFrom("pragmatic_plumber@gmail.com");
-            helper.setTo(email);
-            helper.setSubject("Your appointment was accepted! " + appointmentId);
-            helper.setText(emailBody, true);
+			helper.setFrom("pragmatic_plumber@gmail.com");
+			helper.setTo("service_provider@gmail.com");
+			helper.setSubject("Items out of stock for Appointment " + appointmentId);
+			helper.setText(emailBody, true);
 
-            javaMailSender.send(message);
-        } catch (MessagingException e) {
-            throw new RuntimeException("Failed to send status email: " + e.getMessage(), e);
-        }
-    }
+			javaMailSender.send(message);
+		} catch (MessagingException e) {
+			throw new RuntimeException("Failed to send out-of-stock email: " + e.getMessage(), e);
+		}
+	}
 
-    private String generateEmailBody(Appointment appointment) {
-        return "<html><body>" +
-                "<h2>Appointment Details</h2>" +
-                "<p><strong>Appointment ID:</strong> " + appointment.getAppointment_id() + "</p>" +
-                "<p><strong>Client Name:</strong> " + appointment.getClient_name() + "</p>" +
-                "<p><strong>Client Phone:</strong> " + appointment.getClient_phone() + "</p>" +
-                "<p><strong>Start Time:</strong> " + appointment.getStart_time() + "</p>" +
-                "<p><strong>End Time:</strong> " + appointment.getEnd_time() + "</p>" +
-                "<p><strong>Issue Description:</strong> " + appointment.getIssue_description() + "</p>" +
-                "<p><strong>Estimated Time:</strong> " + appointment.getEstimated_time() + "</p>" +
-                "<p><strong>Status:</strong> Items Out of Stock</p>" +
-                "<br><p>Thank you,</p>" +
-                "<p>Your Pragmatic Plumber Team</p>" +
-                "</body></html>";
-    }
+	private void sendClientAcceptedEmail(Long appointmentId) {
+		Appointment appointment = appointmentRepository.findById(appointmentId)
+				.orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + appointmentId));
+		String email = appointment.getClient_email();
 
-    private String generateClientAcceptedEmailBody(Appointment appointment) {
-        return "<html><body>" +
-                "<h2>Appointment Details</h2>" +
-                "<p><strong>Appointment ID:</strong> " + appointment.getAppointment_id() + "</p>" +
-                "<p><strong>Client Name:</strong> " + appointment.getClient_name() + "</p>" +
-                "<p><strong>Client Phone:</strong> " + appointment.getClient_phone() + "</p>" +
-                "<p><strong>Start Time:</strong> " + appointment.getStart_time() + "</p>" +
-                "<p><strong>End Time:</strong> " + appointment.getEnd_time() + "</p>" +
-                "<p><strong>Issue Description:</strong> " + appointment.getIssue_description() + "</p>" +
-                "<p><strong>Estimated Time:</strong> " + appointment.getEstimated_time() + "</p>" +
-                "<p><strong>Status:</strong></p>" + appointment.getStatus() +
-                "<br><p>Thank you,</p>" +
-                "<p>Your Pragmatic Plumber Team</p>" +
-                "</body></html>";
-    }
+		String emailBody = generateClientAcceptedEmailBody(appointment);
+
+		try {
+			MimeMessage message = javaMailSender.createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+			helper.setFrom("pragmatic_plumber@gmail.com");
+			helper.setTo(email);
+			helper.setSubject("Your appointment was accepted! " + appointmentId);
+			helper.setText(emailBody, true);
+
+			javaMailSender.send(message);
+		} catch (MessagingException e) {
+			throw new RuntimeException("Failed to send status email: " + e.getMessage(), e);
+		}
+	}
+
+	private String generateEmailBody(Appointment appointment) {
+		return "<html><body>" + "<h2>Appointment Details</h2>" + "<p><strong>Appointment ID:</strong> "
+				+ appointment.getAppointment_id() + "</p>" + "<p><strong>Client Name:</strong> "
+				+ appointment.getClient_name() + "</p>" + "<p><strong>Client Phone:</strong> "
+				+ appointment.getClient_phone() + "</p>" + "<p><strong>Start Time:</strong> "
+				+ appointment.getStart_time() + "</p>" + "<p><strong>End Time:</strong> " + appointment.getEnd_time()
+				+ "</p>" + "<p><strong>Issue Description:</strong> " + appointment.getIssue_description() + "</p>"
+				+ "<p><strong>Estimated Time:</strong> " + appointment.getEstimated_time() + "</p>"
+				+ "<p><strong>Status:</strong> Items Out of Stock</p>" + "<br><p>Thank you,</p>"
+				+ "<p>Your Pragmatic Plumber Team</p>" + "</body></html>";
+	}
+
+	private String generateClientAcceptedEmailBody(Appointment appointment) {
+		return "<html><body>" + "<h2>Appointment Details</h2>" + "<p><strong>Appointment ID:</strong> "
+				+ appointment.getAppointment_id() + "</p>" + "<p><strong>Client Name:</strong> "
+				+ appointment.getClient_name() + "</p>" + "<p><strong>Client Phone:</strong> "
+				+ appointment.getClient_phone() + "</p>" + "<p><strong>Start Time:</strong> "
+				+ appointment.getStart_time() + "</p>" + "<p><strong>End Time:</strong> " + appointment.getEnd_time()
+				+ "</p>" + "<p><strong>Issue Description:</strong> " + appointment.getIssue_description() + "</p>"
+				+ "<p><strong>Estimated Time:</strong> " + appointment.getEstimated_time() + "</p>"
+				+ "<p><strong>Status:</strong></p>" + appointment.getStatus() + "<br><p>Thank you,</p>"
+				+ "<p>Your Pragmatic Plumber Team</p>" + "</body></html>";
+	}
+
+	private LocalDateTime formatToDateTimestamp(String dateTime) {
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern(TARGETTED_TIME_FORMAT);
+		return LocalDateTime.parse(dateTime, formatter);
+	}
+
+	public List<Appointment> viewAllAppointmentsBysStatus(String status) {
+		if(Objects.isNull(status) || status.isBlank()) {
+			throw new IllegalArgumentException("Invalid status provided. Status cannot be null or empty.");
+		}
+		Constants found = Constants.valueOf(status.toUpperCase());
+		
+		if(found == null) {
+			throw new IllegalArgumentException("Invalid status provided: " + status 
+					+ " Allowed values: PENDING, ASSIGNED, COMPLETED, REJECTED, ACTIVE.");
+		}
+		
+		return appointmentRepository.findByStatus(found);
+	}
 }
