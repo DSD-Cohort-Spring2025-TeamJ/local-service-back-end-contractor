@@ -107,7 +107,7 @@ public class AppointmentService {
 		appointmentRepository.save(appointment);
 
 		Map<String, List<String>> reservedSlots = technician.getReservedTimeSlots();
-		reservedSlots.computeIfAbsent(request.getStartDateTime(), k -> new ArrayList<>()).add(request.getTime_slot());
+		reservedSlots.computeIfAbsent(request.getDate(), k -> new ArrayList<>()).add(request.getTime_slot());
 		technician.setReservedTimeSlots(reservedSlots);
 		technicianRepository.save(technician);
 
@@ -127,13 +127,14 @@ public class AppointmentService {
 		String assignedTechnicians = String.valueOf(technician.getTech_id());
 		appointment.setAssigned_technician_list(Collections.singletonList(assignedTechnicians));
 
-		if (request.getStartDateTime() != null && !request.getStartDateTime().isBlank()) {
-			appointment.setStart_time(formatToDateTimestamp(request.getStartDateTime()));
-		}
+		//TODO need to add the appointment start_time and end_time while creating an appointment
+//		if (request.getStartDateTime() != null && !request.getStartDateTime().isBlank()) {
+//			appointment.setStart_time(formatToDateTimestamp(request.getStartDateTime()));
+//		}
 
-		if (service.getEstimated_time() != 0 && appointment.getStart_time() != null) {
-			appointment.setEnd_time(appointment.getStart_time().plusMinutes(service.getEstimated_time()));
-		}
+//		if (service.getEstimated_time() != 0 && appointment.getStart_time() != null) {
+//			appointment.setEnd_time(appointment.getStart_time().plusMinutes(service.getEstimated_time()));
+//		}
 		return appointment;
 	}
 
