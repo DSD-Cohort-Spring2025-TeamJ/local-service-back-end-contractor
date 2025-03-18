@@ -18,6 +18,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -248,8 +249,12 @@ public class AppointmentService {
                 .orElseThrow(() -> new ResourceNotFoundException("tech not found with id " + techId));
 
 
-        technician.getReservedTimeSlots().forEach((date, reservedTimeSlot) ->
-                reservedTimeSlot.removeIf(time -> time.equals(String.valueOf(id))));
+        String dateKey = appointment.getStart_time().toLocalDate().toString();
+        String timeSlot = appointment.getStart_time().toLocalTime().format(DateTimeFormatter.ofPattern("h:mm a"));
+
+        if (technician.getReservedTimeSlots().containsKey(dateKey)) {
+            technician.getReservedTimeSlots().get(dateKey).removeIf(time -> time.equals(timeSlot));
+        }
 
         technicianRepository.save(technician);
     }
