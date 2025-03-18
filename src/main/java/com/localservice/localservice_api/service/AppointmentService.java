@@ -52,6 +52,9 @@ public class AppointmentService {
             if (status == Constants.ACCEPTED) {
                 sendClientAcceptedEmail(id);
             }
+            if (status == Constants.REJECTED) {
+                releaseTimeSlotBackToAvailable(id);
+            }
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid status provided: " + incomingStatus +
                     " Allowed values: PENDING, ASSIGNED, COMPLETED, REJECTED, ACTIVE.");
@@ -232,4 +235,23 @@ public class AppointmentService {
                 "<p>Your Pragmatic Plumber Team</p>" +
                 "</body></html>";
     }
+
+    private void releaseTimeSlotBackToAvailable(Long id) {
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + id));
+
+        String techId = appointment.getAssigned_technician_list()
+                .stream()
+                .findFirst().orElseThrow(() -> new ResourceNotFoundException("No assigned tech to apt with id " + id));
+
+        Technician technician = technicianRepository.findById(Long.valueOf(techId))
+                .orElseThrow(() -> new ResourceNotFoundException("tech not found with id " + techId));
+
+
+        technician.getReservedTimeSlots().forEach((date, reservedTimeSlot) ->
+                reservedTimeSlot.removeIf(time -> time.equals(String.valueOf(id))));
+
+        technicianRepository.save(technician);
+    }
+
 }
