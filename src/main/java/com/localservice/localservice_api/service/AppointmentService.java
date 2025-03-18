@@ -18,6 +18,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,8 +50,11 @@ public class AppointmentService {
         Constants status;
         try {
             status = Constants.valueOf(incomingStatus.toUpperCase());
-            if (status == Constants.ACCEPTED) {
+            if (status.equals(Constants.ACCEPTED)) {
                 sendClientAcceptedEmail(id);
+            }
+            if (status.equals(Constants.REJECTED)) {
+                releaseTimeSlotBackToAvailable(id);
             }
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid status provided: " + incomingStatus +
@@ -232,4 +236,27 @@ public class AppointmentService {
                 "<p>Your Pragmatic Plumber Team</p>" +
                 "</body></html>";
     }
+
+    private void releaseTimeSlotBackToAvailable(Long id) {
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + id));
+
+        String techId = appointment.getAssigned_technician_list()
+                .stream()
+                .findFirst().orElseThrow(() -> new ResourceNotFoundException("No assigned tech to apt with id " + id));
+
+        Technician technician = technicianRepository.findById(Long.valueOf(techId))
+                .orElseThrow(() -> new ResourceNotFoundException("tech not found with id " + techId));
+
+
+        String dateKey = appointment.getStart_time().toLocalDate().toString();
+        String timeSlot = appointment.getStart_time().toLocalTime().format(DateTimeFormatter.ofPattern("h:mm a"));
+
+        if (technician.getReservedTimeSlots().containsKey(dateKey)) {
+            technician.getReservedTimeSlots().get(dateKey).removeIf(time -> time.equals(timeSlot));
+        }
+
+        technicianRepository.save(technician);
+    }
+
 }
