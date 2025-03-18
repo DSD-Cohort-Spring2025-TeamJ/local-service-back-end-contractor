@@ -50,10 +50,10 @@ public class AppointmentService {
         Constants status;
         try {
             status = Constants.valueOf(incomingStatus.toUpperCase());
-            if (status == Constants.ACCEPTED) {
+            if (status.equals(Constants.ACCEPTED)) {
                 sendClientAcceptedEmail(id);
             }
-            if (status == Constants.REJECTED) {
+            if (status.equals(Constants.REJECTED)) {
                 releaseTimeSlotBackToAvailable(id);
             }
         } catch (IllegalArgumentException e) {
