@@ -72,3 +72,14 @@ echo "Restarting Nginx..."
 sudo systemctl start nginx
 
 echo "SSL setup completed successfully!"
+
+# Copy custom nginx config from app source bundle to system
+echo "Copying custom nginx configuration..."
+sudo cp -f /var/app/staging/.platform/nginx/nginx.conf /etc/nginx/nginx.conf
+sudo cp -f /var/app/staging/.platform/nginx/conf.d/* /etc/nginx/conf.d/
+
+# Test and restart nginx with new config
+echo "Testing new Nginx configuration..."
+sudo nginx -t && sudo systemctl restart nginx
+
+echo "Custom nginx configuration applied!"
