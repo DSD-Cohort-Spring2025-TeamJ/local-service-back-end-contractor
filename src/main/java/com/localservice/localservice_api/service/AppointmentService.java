@@ -122,7 +122,7 @@ public class AppointmentService {
 
         List<ItemViewDTO> itemViews = items.stream()
                 .map(item -> {
-                    int qtyNeeded = serviceItemRelationRepository.getQtyNeededByItemid(item.getItem_id());
+                    int qtyNeeded = serviceItemRelationRepository.getQtyNeededByItemid(item.getItem_id(), serviceId);
                     boolean isOutOfStock = item.getStock_qty() < qtyNeeded;
                     return new ItemViewDTO(item, qtyNeeded, isOutOfStock);
                 })
