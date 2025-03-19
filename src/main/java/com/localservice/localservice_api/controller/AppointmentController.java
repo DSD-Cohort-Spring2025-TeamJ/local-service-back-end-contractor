@@ -1,5 +1,6 @@
 package com.localservice.localservice_api.controller;
 
+import com.localservice.localservice_api.dto.AdminNoteUpdateRequestDto;
 import com.localservice.localservice_api.dto.AppointmentRequestDto;
 import com.localservice.localservice_api.entity.Appointment;
 import com.localservice.localservice_api.response.AdminAppointmentViewDTO;
@@ -75,6 +76,17 @@ public class AppointmentController {
     public ResponseEntity<?> updateItemInventoryForAppointment(@PathVariable Long appointment_id) {
         try {
             String message = appointmentService.updateItemInventoryAndNotify(appointment_id);
+            return ResponseEntity.ok(message);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error retrieving admin appointment view: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/admin/")
+    public ResponseEntity<?> updateAdminNote(@RequestBody AdminNoteUpdateRequestDto requestDto) {
+        try {
+            String message = appointmentService.updateAdminNote(requestDto);
             return ResponseEntity.ok(message);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
