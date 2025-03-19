@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - nginx
 
 jobs:
   deploy:
@@ -23,38 +24,14 @@ jobs:
         run: |
           mvn clean package -DskipTests
 
+      - name: Make postdeploy script executable
+        run: chmod +x .platform/hooks/postdeploy/01_ssl_setup.sh
+
       - name: Set AWS credentials
         run: |
-          # Configure AWS CLI with the AWS credentials from GitHub Secrets
           aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws configure set region us-east-1
-
-      - name: Set environment variables for Elastic Beanstalk
-        run: |
-          # Set AWS region
-          export AWS_REGION="us-east-1"
-          
-          # Use AWS CLI to update Elastic Beanstalk environment with DB_URL and DB_PASSWORD
-          aws elasticbeanstalk update-environment \
-            --region $AWS_REGION \
-            --environment-name "Booking-app-env" \
-            --option-settings "Namespace=aws:elasticbeanstalk:application:environment,OptionName=DB_URL,Value=${{ secrets.DB_URL }}" \
-            "Namespace=aws:elasticbeanstalk:application:environment,OptionName=DB_PASSWORD,Value=${{ secrets.DB_PASSWORD }}" \
-            "Namespace=aws:elasticbeanstalk:application:environment,OptionName=SMTP_USER,Value=${{ secrets.SMTP_USER }}" \
-            "Namespace=aws:elasticbeanstalk:application:environment,OptionName=SMTP_PWD,Value=${{ secrets.SMTP_PWD }}"
-
-      - name: Make postdeploy script executable
-        run: chmod +x .platform/hooks/postdeploy/01_setup_ssl.sh
-        
-      - name: Wait for environment to be ready
-        run: |
-          export AWS_REGION="us-east-1" 
-          aws elasticbeanstalk describe-environments --environment-names "Booking-app-env" --region $AWS_REGION --query "Environments[0].Status" --output text
-          until [ "$(aws elasticbeanstalk describe-environments --environment-names "Booking-app-env" --region $AWS_REGION --query "Environments[0].Status" --output text)" == "Ready" ]; do
-            echo "Waiting for environment to be ready..."
-            sleep 30
-          done
 
       - name: Deploy to EB
         uses: einaregilsson/beanstalk-deploy@v21
