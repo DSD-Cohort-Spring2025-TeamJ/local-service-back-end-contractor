@@ -18,6 +18,4 @@ public interface ServiceItemRelationRepository extends JpaRepository<ServiceItem
     @Query("SELECT i FROM Item i WHERE i.item_id IN (SELECT sir.item.item_id FROM ServiceItemRelation sir WHERE sir.service.service_id = :service_id)")
     List<Item> getItemsByService_id(@Param("service_id") Long serviceId);
 
-
-    int getQtyNeededByItemid(long itemId);
 }
