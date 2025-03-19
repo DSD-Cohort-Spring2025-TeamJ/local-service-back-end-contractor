@@ -2,7 +2,6 @@ package com.localservice.localservice_api.repository;
 
 import com.localservice.localservice_api.entity.Item;
 import com.localservice.localservice_api.entity.ServiceItemRelation;
-import com.localservice.localservice_api.entity.Technician;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

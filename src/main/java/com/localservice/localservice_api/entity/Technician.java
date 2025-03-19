@@ -18,6 +18,7 @@ public class Technician {
 
     private String name;
     private int hourly_rate;
+    private String email;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")

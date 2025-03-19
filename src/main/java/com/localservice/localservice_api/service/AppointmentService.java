@@ -52,9 +52,11 @@ public class AppointmentService {
             status = Constants.valueOf(incomingStatus.toUpperCase());
             if (status.equals(Constants.ACCEPTED)) {
                 sendClientAcceptedEmail(id);
+                sendTechnicianAssignedEmail(id);
             }
             if (status.equals(Constants.REJECTED)) {
                 releaseTimeSlotBackToAvailable(id);
+                sendClientRejectedEmail(id);
             }
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid status provided: " + incomingStatus +
@@ -161,82 +163,6 @@ public class AppointmentService {
         return isOutOfStock;
     }
 
-
-    private void sendOutOfStockEmail(Long appointmentId) {
-        Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + appointmentId));
-
-        String emailBody = generateEmailBody(appointment);
-
-        try {
-            MimeMessage message = javaMailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true);
-
-            helper.setFrom("pragmatic_plumber@gmail.com");
-            helper.setTo("service_provider@gmail.com");
-            helper.setSubject("Items out of stock for Appointment " + appointmentId);
-            helper.setText(emailBody, true);
-
-            javaMailSender.send(message);
-        } catch (MessagingException e) {
-            throw new RuntimeException("Failed to send out-of-stock email: " + e.getMessage(), e);
-        }
-    }
-
-    private void sendClientAcceptedEmail(Long appointmentId) {
-        Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + appointmentId));
-        String email = appointment.getClient_email();
-
-        String emailBody = generateClientAcceptedEmailBody(appointment);
-
-        try {
-            MimeMessage message = javaMailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true);
-
-            helper.setFrom("pragmatic_plumber@gmail.com");
-            helper.setTo(email);
-            helper.setSubject("Your appointment was accepted! " + appointmentId);
-            helper.setText(emailBody, true);
-
-            javaMailSender.send(message);
-        } catch (MessagingException e) {
-            throw new RuntimeException("Failed to send status email: " + e.getMessage(), e);
-        }
-    }
-
-    private String generateEmailBody(Appointment appointment) {
-        return "<html><body>" +
-                "<h2>Appointment Details</h2>" +
-                "<p><strong>Appointment ID:</strong> " + appointment.getAppointment_id() + "</p>" +
-                "<p><strong>Client Name:</strong> " + appointment.getClient_name() + "</p>" +
-                "<p><strong>Client Phone:</strong> " + appointment.getClient_phone() + "</p>" +
-                "<p><strong>Start Time:</strong> " + appointment.getStart_time() + "</p>" +
-                "<p><strong>End Time:</strong> " + appointment.getEnd_time() + "</p>" +
-                "<p><strong>Issue Description:</strong> " + appointment.getIssue_description() + "</p>" +
-                "<p><strong>Estimated Time:</strong> " + appointment.getEstimated_time() + "</p>" +
-                "<p><strong>Status:</strong> Items Out of Stock</p>" +
-                "<br><p>Thank you,</p>" +
-                "<p>Your Pragmatic Plumber Team</p>" +
-                "</body></html>";
-    }
-
-    private String generateClientAcceptedEmailBody(Appointment appointment) {
-        return "<html><body>" +
-                "<h2>Appointment Details</h2>" +
-                "<p><strong>Appointment ID:</strong> " + appointment.getAppointment_id() + "</p>" +
-                "<p><strong>Client Name:</strong> " + appointment.getClient_name() + "</p>" +
-                "<p><strong>Client Phone:</strong> " + appointment.getClient_phone() + "</p>" +
-                "<p><strong>Start Time:</strong> " + appointment.getStart_time() + "</p>" +
-                "<p><strong>End Time:</strong> " + appointment.getEnd_time() + "</p>" +
-                "<p><strong>Issue Description:</strong> " + appointment.getIssue_description() + "</p>" +
-                "<p><strong>Estimated Time:</strong> " + appointment.getEstimated_time() + "</p>" +
-                "<p><strong>Status:</strong></p>" + appointment.getStatus() +
-                "<br><p>Thank you,</p>" +
-                "<p>Your Pragmatic Plumber Team</p>" +
-                "</body></html>";
-    }
-
     private void releaseTimeSlotBackToAvailable(Long id) {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + id));
@@ -257,6 +183,131 @@ public class AppointmentService {
         }
 
         technicianRepository.save(technician);
+    }
+
+    private void sendClientStatusEmail(Long appointmentId, String statusMessage, String subjectPrefix, boolean bccAdmin) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + appointmentId));
+        String emailBody = generateAppointmentEmailBody(appointment, statusMessage);
+        sendEmail(appointment.getClient_email(), subjectPrefix + appointmentId, emailBody, bccAdmin);
+    }
+
+    private void sendClientAcceptedEmail(Long appointmentId) {
+        sendClientStatusEmail(appointmentId, "Accepted", "Your appointment was accepted! ", false);
+    }
+
+    private void sendClientRejectedEmail(Long appointmentId) {
+        sendClientStatusEmail(appointmentId, "Rejected", "Your appointment was rejected! ", true);
+    }
+
+    private void sendOutOfStockEmail(Long appointmentId) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + appointmentId));
+
+        String emailBody = generateAppointmentEmailBody(appointment, "Items Out of Stock");
+        sendEmail("service_provider@gmail.com", "Items out of stock for Appointment " + appointmentId, emailBody, false);
+    }
+
+    private void sendTechnicianAssignedEmail(Long appointmentId) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + appointmentId));
+
+        List<Item> items = serviceItemRelationRepository.getItemsByService_id(appointment.getService_id().getService_id());
+
+        List<ItemViewDTO> itemViews = items.stream()
+                .map(item -> {
+                    int qtyNeeded = serviceItemRelationRepository.getQtyNeededByItemid(item.getItem_id());
+                    boolean outOfStock = item.getStock_qty() < qtyNeeded;
+                    return new ItemViewDTO(item, qtyNeeded, outOfStock);
+                })
+                .collect(Collectors.toList());
+
+        boolean hasOutOfStock = itemViews.stream().anyMatch(ItemViewDTO::isOutOfStock);
+        Technician technician = getAssignedTechnician(appointment);
+
+        String emailBody = generateTechnicianEmailBody(appointment, itemViews, hasOutOfStock);
+        String subject = "Appointment Assigned: " + appointmentId + (hasOutOfStock ? " (Items Out of Stock Alert)" : "");
+
+        sendEmail(technician.getEmail(), subject, emailBody, false);
+    }
+
+    private void sendEmail(String to, String subject, String body, boolean bccAdmin) {
+        try {
+            MimeMessage message = javaMailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+            helper.setFrom("pragmatic_plumber@gmail.com");
+            helper.setTo(to);
+            if (bccAdmin) {
+                helper.setBcc("pragmatic_plumber@gmail.com");
+            }
+            helper.setSubject(subject);
+            helper.setText(body, true);
+
+            javaMailSender.send(message);
+        } catch (MessagingException e) {
+            throw new RuntimeException("Failed to send email: " + e.getMessage(), e);
+        }
+    }
+
+    private String generateAppointmentEmailBody(Appointment appointment, String statusMessage) {
+        return "<html><body>" +
+                "<h2>Appointment Details</h2>" +
+                "<p><strong>Appointment ID:</strong> " + appointment.getAppointment_id() + "</p>" +
+                "<p><strong>Client Name:</strong> " + appointment.getClient_name() + "</p>" +
+                "<p><strong>Client Phone:</strong> " + appointment.getClient_phone() + "</p>" +
+                "<p><strong>Start Time:</strong> " + appointment.getStart_time() + "</p>" +
+                "<p><strong>End Time:</strong> " + appointment.getEnd_time() + "</p>" +
+                "<p><strong>Issue Description:</strong> " + appointment.getIssue_description() + "</p>" +
+                "<p><strong>Status:</strong> " + statusMessage + "</p>" +
+                "<br><p>Thank you,</p>" +
+                "<p>Your Pragmatic Plumber Team</p>" +
+                "</body></html>";
+    }
+
+    private Technician getAssignedTechnician(Appointment appointment) {
+        String techId = appointment.getAssigned_technician_list()
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("No technician assigned to appointment " + appointment.getAppointment_id()));
+
+        return technicianRepository.findById(Long.valueOf(techId))
+                .orElseThrow(() -> new ResourceNotFoundException("Technician not found with id: " + techId));
+    }
+
+    private String generateTechnicianEmailBody(Appointment appointment, List<ItemViewDTO> items, boolean hasOutOfStock) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<html><body>");
+        sb.append("<h2>New Appointment Assigned</h2>");
+        sb.append("<p><strong>Appointment ID:</strong> ").append(appointment.getAppointment_id()).append("</p>");
+        sb.append("<p><strong>Client Name:</strong> ").append(appointment.getClient_name()).append("</p>");
+        sb.append("<p><strong>Client Phone:</strong> ").append(appointment.getClient_phone()).append("</p>");
+        sb.append("<p><strong>Location:</strong> ").append(appointment.getLocation()).append("</p>");
+        sb.append("<p><strong>Start Time:</strong> ").append(appointment.getStart_time()).append("</p>");
+        sb.append("<p><strong>End Time:</strong> ").append(appointment.getEnd_time()).append("</p>");
+        sb.append("<p><strong>Issue Description:</strong> ").append(appointment.getIssue_description()).append("</p>");
+
+        sb.append("<h3>Items Needed:</h3><ul>");
+        for (ItemViewDTO itemView : items) {
+            sb.append("<li>").append(itemView.getItem().getItem_name())
+                    .append(" — Needed: ").append(itemView.getQty_needed())
+                    .append(" — In Stock: ").append(itemView.getItem().getStock_qty());
+            if (itemView.isOutOfStock()) {
+                sb.append(" <strong>(OUT OF STOCK)</strong>");
+            }
+            sb.append("</li>");
+        }
+        sb.append("</ul>");
+
+        if (hasOutOfStock) {
+            sb.append("<p><strong>⚠ Some parts are out of stock. Please check inventory before proceeding.</strong></p>");
+        }
+
+        sb.append("<br><p>Thank you,</p>");
+        sb.append("<p>Your Pragmatic Plumber Team</p>");
+        sb.append("</body></html>");
+
+        return sb.toString();
     }
 
 }
