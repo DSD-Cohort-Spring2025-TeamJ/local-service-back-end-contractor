@@ -25,7 +25,7 @@ jobs:
           mvn clean package -DskipTests
 
       - name: Make postdeploy script executable
-        run: chmod +x .platform/hooks/postdeploy/01_ssl_setup.sh
+        run: chmod +x .platform/hooks/postdeploy/01_setup_ssl.sh
 
       - name: Set AWS credentials
         run: |
