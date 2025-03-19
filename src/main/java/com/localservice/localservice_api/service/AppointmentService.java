@@ -1,6 +1,7 @@
 package com.localservice.localservice_api.service;
 
 import com.localservice.localservice_api.constants.Constants;
+import com.localservice.localservice_api.dto.AdminNoteUpdateRequestDto;
 import com.localservice.localservice_api.dto.AppointmentRequestDto;
 import com.localservice.localservice_api.entity.Appointment;
 import com.localservice.localservice_api.entity.Technician;
@@ -161,6 +162,18 @@ public class AppointmentService {
             }
         }
         return isOutOfStock;
+    }
+
+    public String updateAdminNote(AdminNoteUpdateRequestDto requestDto) {
+        Appointment appointment = appointmentRepository.findById(requestDto.getAppointment_id())
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + requestDto.getAppointment_id()));
+
+        if(requestDto.getAdmin_note() != null) {
+            appointment.setAdmin_note(requestDto.getAdmin_note());
+            appointmentRepository.save(appointment);
+        }
+
+        return "Admin Note successfully saved";
     }
 
     private void releaseTimeSlotBackToAvailable(Long id) {
