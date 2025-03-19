@@ -83,3 +83,4 @@ echo "Testing new Nginx configuration..."
 sudo nginx -t && sudo systemctl restart nginx
 
 echo "Custom nginx configuration applied!"
+
