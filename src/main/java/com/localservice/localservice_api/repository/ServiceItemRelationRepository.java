@@ -19,4 +19,5 @@ public interface ServiceItemRelationRepository extends JpaRepository<ServiceItem
     List<Item> getItemsByService_id(@Param("service_id") Long serviceId);
 
 
+    int getQtyNeededByItemid(long itemId);
 }
