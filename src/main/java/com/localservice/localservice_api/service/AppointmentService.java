@@ -132,14 +132,17 @@ public class AppointmentService {
                 .collect(Collectors.toList());
 
         List<Technician> technicians = serviceTechinicianRelationRepository.getTechiciansByService_id(serviceId);
-
+        if (technicians.size() == 1) {
+            return new AdminAppointmentViewDTO(appointment, Collections.singletonList(technicians.get(0)), itemViews);
+        }
         return new AdminAppointmentViewDTO(appointment, technicians, itemViews);
     }
 
     public String updateItemInventoryAndNotify(Long appointment_id) throws MessagingException {
         AdminAppointmentViewDTO adminAppointmentViewDTO = viewAdminViewAppointment(appointment_id);
         List<ItemViewDTO> itemViewDTOList = adminAppointmentViewDTO.getItems();
-        boolean isOutOfStock = updateInventory(itemViewDTOList);
+        // check all items in itemViewDTOList and if any item is out of stock, mark isOutOfStock as true
+        boolean isOutOfStock = itemViewDTOList.stream().anyMatch(ItemViewDTO::isOutOfStock);
 
         if (!isOutOfStock) {
             return "Invalid request";
@@ -148,20 +151,6 @@ public class AppointmentService {
         sendOutOfStockEmail(appointment_id);
 
         return "Inventory has been updated successfully";
-    }
-
-    private boolean updateInventory(List<ItemViewDTO> itemViewDTOList) {
-        boolean isOutOfStock = false;
-
-        for (ItemViewDTO itemViewDTO : itemViewDTOList) {
-            if (itemViewDTO.isOutOfStock()) {
-                Item item = itemViewDTO.getItem();
-                item.setStock_qty(itemViewDTO.getQty_needed());
-                itemRepository.save(item);
-                isOutOfStock = true;
-            }
-        }
-        return isOutOfStock;
     }
 
     public String updateAdminNote(AdminNoteUpdateRequestDto requestDto) {
