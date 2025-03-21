@@ -1,15 +1,9 @@
 package com.localservice.localservice_api.service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.localservice.localservice_api.dto.MultipleUpdateResponseDto;
@@ -35,29 +29,32 @@ public class ServiceService {
 		return serviceRepository.findAll();
 	}
 
-	public ServiceTechnicianDto getTimeSlotsBasedOnSelectedService(Long service_id) {
-		Map<String, List<String>> availableTimeSlots = generateDateAndTimeSlotsWindow();
+	public List<ServiceTechnicianDto> getTimeSlotsBasedOnSelectedService(Long serviceId) {
+		Map<String, List<String>> allAvailableTimeSlots = generateDateAndTimeSlotsWindow();
 		Map<Long, Map<String, List<String>>> reservedTimeSlots = getTechniciansReservedTimeSlots();
-		int estimatedTime = getEstimatedTimeBasedOnService(service_id);
+		int estimatedTime = getEstimatedTimeBasedOnService(serviceId);
 
-		Map<Long, Map<String, List<String>>> availableSlotsByTechnician = new HashMap<>();
+        List<ServiceTechnicianDto> results = new ArrayList<>();
 
-		reservedTimeSlots.forEach((techId, techReservedSlots) -> {
-			Map<String, Set<String>> flattenedReservedSlots = techReservedSlots.entrySet().stream()
-					.collect(Collectors.toMap(Map.Entry::getKey, e -> new HashSet<>(e.getValue())));
+		reservedTimeSlots.forEach((techId, reservedPerDate) -> {
+			allAvailableTimeSlots.forEach((date, dailySlots) -> {
+				List<String> filteredSlots = dailySlots.stream()
+						.filter(slot -> !reservedPerDate.getOrDefault(date, Collections.emptyList()).contains(slot))
+						.collect(Collectors.toList());
 
-			Map<String, List<String>> techAvailableSlots = availableTimeSlots.entrySet().stream()
-					.collect(Collectors.toMap(Map.Entry::getKey, e -> new ArrayList<>(e.getValue())));
-			techAvailableSlots.forEach((date, slots) -> slots.removeIf(
-					time -> flattenedReservedSlots.getOrDefault(date, Collections.emptySet()).contains(time)));
-			availableSlotsByTechnician.put(techId, techAvailableSlots);
+				List<ServiceTechnicianDto.AvailabilityWindow> availabilityWindows = findAvailabilityWindows(filteredSlots, estimatedTime);
+
+				if (!availabilityWindows.isEmpty()) {
+					results.add(new ServiceTechnicianDto(techId, date, availabilityWindows));
+				}
+			});
 		});
 
-		return new ServiceTechnicianDto(service_id, estimatedTime, availableSlotsByTechnician);
+		return results;
 	}
 
-	private int getEstimatedTimeBasedOnService(long service_id) {
-		Service service = serviceRepository.findById(service_id)
+	private int getEstimatedTimeBasedOnService(long serviceId) {
+		Service service = serviceRepository.findById(serviceId)
 				.orElseThrow(() -> new EntityNotFoundException("No Service found with that ID"));
 		return service.getEstimated_time();
 	}
@@ -69,17 +66,56 @@ public class ServiceService {
 
 	private Map<String, List<String>> generateDateAndTimeSlotsWindow() {
 		Map<String, List<String>> dateTimeMap = new HashMap<>();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("h:mm a");
 
 		for (int i = 0; i < 7; i++) {
-			LocalDate todayPlusSevenDays = LocalDate.now().plusDays(i);
-			String dateString = todayPlusSevenDays.toString();
+			LocalDate date = LocalDate.now().plusDays(i);
+			String dateString = date.toString();
 
-			List<String> timeSlots = new ArrayList<>(Arrays.asList("9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM",
-					"1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM"));
+			List<String> timeSlots = new ArrayList<>();
+			LocalTime startTime = LocalTime.of(9, 0);
+			LocalTime endTime = LocalTime.of(17, 0);
+
+			while (startTime.isBefore(endTime)) {
+				timeSlots.add(startTime.format(formatter));
+				startTime = startTime.plusMinutes(30);
+			}
 
 			dateTimeMap.put(dateString, timeSlots);
 		}
 		return dateTimeMap;
+	}
+
+	private boolean areConsecutive(LocalTime first, LocalTime second) {
+		return first.plusMinutes(30).equals(second);
+	}
+
+	private List<ServiceTechnicianDto.AvailabilityWindow> findAvailabilityWindows(List<String> availableSlots, int estimatedTimeInMinutes) {
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("h:mm a");
+		List<LocalTime> times = availableSlots.stream()
+				.map(slot -> LocalTime.parse(slot, formatter))
+				.sorted()
+				.toList();
+
+		int requiredSlots = estimatedTimeInMinutes / 30;
+		List<ServiceTechnicianDto.AvailabilityWindow> windows = new ArrayList<>();
+
+		for (int i = 0; i <= times.size() - requiredSlots; i++) {
+			boolean fits = true;
+			for (int j = 1; j < requiredSlots; j++) {
+				if (!areConsecutive(times.get(i + j - 1), times.get(i + j))) {
+					fits = false;
+					break;
+				}
+			}
+			if (fits) {
+				LocalTime start = times.get(i);
+				LocalTime end = start.plusMinutes(estimatedTimeInMinutes);
+				windows.add(new ServiceTechnicianDto.AvailabilityWindow(start.format(formatter), end.format(formatter), estimatedTimeInMinutes));
+			}
+		}
+
+		return windows;
 	}
 
 	public Service createService(Service service) {
