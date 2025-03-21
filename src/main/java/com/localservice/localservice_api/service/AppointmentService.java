@@ -19,7 +19,6 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -86,7 +85,7 @@ public class AppointmentService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd h:mm a");
         appointment.setStart_time(LocalDateTime.parse(request.getDate() + " " + request.getStart_time(), formatter));
         appointment.setEnd_time(LocalDateTime.parse(request.getDate() + " " + request.getEnd_time(), formatter));
-        appointment.setEstimated_time(Instant.ofEpochSecond(service.getEstimated_time() * 60L));
+        appointment.setEstimated_time(service.getEstimated_time());
 
         appointmentRepository.save(appointment);
 
