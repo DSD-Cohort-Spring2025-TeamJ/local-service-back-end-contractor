@@ -24,7 +24,7 @@ public class Appointment {
     private LocalDateTime start_time;
     private LocalDateTime end_time;
     private String issue_description;
-    private Instant estimated_time;
+    private int estimated_time;
 
     @Enumerated(EnumType.STRING)
     private Constants status = Constants.PENDING;
