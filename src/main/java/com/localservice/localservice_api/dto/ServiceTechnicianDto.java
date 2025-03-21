@@ -4,13 +4,19 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.util.List;
-import java.util.Map;
 
 @Data
 @AllArgsConstructor
 public class ServiceTechnicianDto {
-    private long service_id;
-    private int estimated_time;
-    private Map<Long, Map<String, List<String>>> availableTimeSlotsByTechnician;
+    private long techId;
+    private String date;
+    private List<AvailabilityWindow> availableWindows;
 
+    @Data
+    @AllArgsConstructor
+    public static class AvailabilityWindow {
+        private String start;
+        private String end;
+        private int availableDuration;
+    }
 }

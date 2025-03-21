@@ -10,7 +10,7 @@ public class CorsConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:5173", "https://thepragmaticplumber.netlify.app")
+                .allowedOrigins("http://localhost:5173", "https://thepragmaticplumber.netlify.app", "http://localhost:8080")
                 .allowedMethods("GET", "POST", "PUT", "DELETE")
                 .allowedHeaders("*")
                 .allowCredentials(true)
@@ -18,12 +18,12 @@ public class CorsConfig implements WebMvcConfigurer {
 
         // Allow Swagger UI and OpenAPI endpoints
         registry.addMapping("/v3/api-docs/**")
-                .allowedOrigins("http://localhost:5173", "https://thepragmaticplumber.netlify.app")
+                .allowedOrigins("http://localhost:5173", "https://thepragmaticplumber.netlify.app", "http://localhost:8080")
                 .allowedMethods("GET")
                 .allowedHeaders("*");
 
         registry.addMapping("/swagger-ui/**")
-                .allowedOrigins("http://localhost:5173", "https://thepragmaticplumber.netlify.app")
+                .allowedOrigins("http://localhost:5173", "https://thepragmaticplumber.netlify.app", "http://localhost:8080")
                 .allowedMethods("GET");
     }
 

@@ -78,11 +78,11 @@ public class ServiceController {
     @GetMapping("/{service_id}/timeSlots")
     public ResponseEntity<?> getTimeSlotsBasedOnSelectedService(@PathVariable long service_id) {
         try {
-            ServiceTechnicianDto serviceTechnicianDto = serviceService.getTimeSlotsBasedOnSelectedService(service_id);
+            List<ServiceTechnicianDto> serviceTechnicianDto = serviceService.getTimeSlotsBasedOnSelectedService(service_id);
 
-            if (serviceTechnicianDto == null) {
+            if (serviceTechnicianDto.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("No service found with ID: " + service_id);
+                        .body("No availability found for service ID: " + service_id);
             }
 
             return ResponseEntity.ok(serviceTechnicianDto);
