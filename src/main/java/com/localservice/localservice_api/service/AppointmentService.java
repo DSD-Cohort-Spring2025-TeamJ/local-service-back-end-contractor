@@ -19,6 +19,9 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.ArrayList;
@@ -34,17 +37,15 @@ public class AppointmentService {
     private final ServiceRepository serviceRepository;
     private final ServiceItemRelationRepository serviceItemRelationRepository;
     private final ServiceTechinicianRelationRepository serviceTechinicianRelationRepository;
-    private final ItemRepository itemRepository;
     @Autowired
     private JavaMailSender javaMailSender;
 
-    public AppointmentService(AppointmentRepository appointmentRepository, TechnicianRepository technicianRepository, ServiceRepository serviceRepository, ServiceItemRelationRepository serviceItemRelationRepository, ServiceTechinicianRelationRepository serviceTechinicianRelationRepository, ItemRepository itemRepository) {
+    public AppointmentService(AppointmentRepository appointmentRepository, TechnicianRepository technicianRepository, ServiceRepository serviceRepository, ServiceItemRelationRepository serviceItemRelationRepository, ServiceTechinicianRelationRepository serviceTechinicianRelationRepository) {
         this.appointmentRepository = appointmentRepository;
         this.technicianRepository = technicianRepository;
         this.serviceRepository = serviceRepository;
         this.serviceItemRelationRepository = serviceItemRelationRepository;
         this.serviceTechinicianRelationRepository = serviceTechinicianRelationRepository;
-        this.itemRepository = itemRepository;
     }
 
     public Appointment updateAppointmentStatus(Long id, String incomingStatus) {
@@ -82,14 +83,38 @@ public class AppointmentService {
 
         Appointment appointment = getAppointment(request, service, technician);
 
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd h:mm a");
+        appointment.setStart_time(LocalDateTime.parse(request.getDate() + " " + request.getStart_time(), formatter));
+        appointment.setEnd_time(LocalDateTime.parse(request.getDate() + " " + request.getEnd_time(), formatter));
+        appointment.setEstimated_time(Instant.ofEpochSecond(service.getEstimated_time() * 60L));
+
         appointmentRepository.save(appointment);
 
+        List<String> reservedSlotsForWindow = generateTimeSlotsBetween(
+                request.getStart_time(), request.getEnd_time()
+        );
+
         Map<String, List<String>> reservedSlots = technician.getReservedTimeSlots();
-        reservedSlots.computeIfAbsent(request.getDate(), k -> new ArrayList<>()).add(request.getTime_slot());
+        reservedSlots.computeIfAbsent(request.getDate(), k -> new ArrayList<>()).addAll(reservedSlotsForWindow);
         technician.setReservedTimeSlots(reservedSlots);
         technicianRepository.save(technician);
 
         return appointment;
+    }
+
+    private List<String> generateTimeSlotsBetween(String startTimeStr, String endTimeStr) {
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("h:mm a");
+
+        LocalTime startTime = LocalTime.parse(startTimeStr, timeFormatter);
+        LocalTime endTime = LocalTime.parse(endTimeStr, timeFormatter);
+
+        List<String> timeSlots = new ArrayList<>();
+        LocalTime current = startTime;
+        while (current.isBefore(endTime)) {
+            timeSlots.add(current.format(timeFormatter));
+            current = current.plusMinutes(30);
+        }
+        return timeSlots;
     }
 
     private static Appointment getAppointment(AppointmentRequestDto request, com.localservice.localservice_api.entity.Service service, Technician technician) {
