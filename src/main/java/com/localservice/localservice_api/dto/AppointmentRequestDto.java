@@ -8,7 +8,8 @@ public class AppointmentRequestDto {
     private int estimated_time;
     private Long tech_id;
     private String date;
-    private String time_slot;
+    private String start_time;
+    private String end_time;
     private String name;
     private String email;
     private String phone;
