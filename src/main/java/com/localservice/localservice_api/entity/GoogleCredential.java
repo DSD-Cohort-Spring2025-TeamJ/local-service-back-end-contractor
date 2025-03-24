@@ -19,7 +19,7 @@ public class GoogleCredential {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String accessToken;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT")
     private String refreshToken;
 
     @Column(nullable = false)
