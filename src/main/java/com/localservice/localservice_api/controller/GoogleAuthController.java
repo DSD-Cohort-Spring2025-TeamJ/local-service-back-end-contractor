@@ -43,7 +43,7 @@ public class GoogleAuthController {
                 : "https://thepragmaticplumber.netlify.app/admin";
 
         TokenResponse tokenResponse = googleAuthorizationCodeFlow.newTokenRequest(code)
-                .setRedirectUri(redirectUri)
+                .setRedirectUri("https://booking-app.us-east-1.elasticbeanstalk.com/service-provider/api/calendar/oauth/callback")
                 .execute();
 
         Credential credential = googleAuthorizationCodeFlow.createAndStoreCredential(tokenResponse, userId);
