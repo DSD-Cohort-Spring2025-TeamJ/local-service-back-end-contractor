@@ -56,12 +56,4 @@ public class GoogleCalendarConfig {
         return flow.newAuthorizationUrl().setRedirectUri("https://booking-app.us-east-1.elasticbeanstalk.com/service-provider/api/calendar/oauth/callback").setState(userId).build();
     }
 
-    public static void storeUserToken(String userId, Credential credential) {
-        userCredentials.put(userId, credential);
-    }
-
-    public static Credential getUserCredentials(String userId) {
-        return userCredentials.get(userId);
-    }
-
 }
