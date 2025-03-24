@@ -44,4 +44,6 @@ public class Appointment {
     @Transient
     private List<String> missing_item_list;
 
+    private boolean synced_with_calendar = false;
+
 }
