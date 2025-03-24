@@ -6,7 +6,6 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.localservice.localservice_api.configuration.GoogleCalendarConfig;
 import com.localservice.localservice_api.service.GoogleCredentialService;
 import com.localservice.localservice_api.service.JwtService;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -31,14 +30,20 @@ public class GoogleAuthController {
     }
 
     @GetMapping("/callback")
-    public void callback(@RequestParam("code") String code, @RequestParam(value = "state", required = false) String userId, HttpServletResponse response) throws IOException {
+    public @ResponseBody String callback(
+            @RequestParam("code") String code,
+            @RequestParam(value = "state", required = false) String userId
+    ) throws IOException {
         if (userId == null) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing userId. Please log in again.");
-            return;
+            return "{\"error\": \"Missing userId. Please log in again.\"}";
         }
 
+        String redirectUri = userId.contains("localhost")
+                ? "http://localhost:5173/admin"
+                : "https://thepragmaticplumber.netlify.app/admin";
+
         TokenResponse tokenResponse = googleAuthorizationCodeFlow.newTokenRequest(code)
-                .setRedirectUri("https://booking-app.us-east-1.elasticbeanstalk.com/service-provider/api/calendar/oauth/callback")
+                .setRedirectUri(redirectUri)
                 .execute();
 
         Credential credential = googleAuthorizationCodeFlow.createAndStoreCredential(tokenResponse, userId);
@@ -47,11 +52,7 @@ public class GoogleAuthController {
 
         String jwtToken = jwtService.generateToken(userId);
 
-        String redirectUrl = userId.contains("localhost")
-                ? "http://localhost:5173/admin?token=" + jwtToken
-                : "https://thepragmaticplumber.netlify.app/admin?token=" + jwtToken;
-
-        response.sendRedirect(redirectUrl);
+        return String.format("{\"token\": \"%s\"}", jwtToken);
     }
 
 }
