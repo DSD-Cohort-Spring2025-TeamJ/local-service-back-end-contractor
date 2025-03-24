@@ -6,6 +6,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.localservice.localservice_api.configuration.GoogleCalendarConfig;
 import com.localservice.localservice_api.service.GoogleCredentialService;
 import com.localservice.localservice_api.service.JwtService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -30,17 +31,15 @@ public class GoogleAuthController {
     }
 
     @GetMapping("/callback")
-    public @ResponseBody String callback(
+    public void callback(
             @RequestParam("code") String code,
-            @RequestParam(value = "state", required = false) String userId
+            @RequestParam(value = "state", required = false) String userId,
+            HttpServletResponse response
     ) throws IOException {
         if (userId == null) {
-            return "{\"error\": \"Missing userId. Please log in again.\"}";
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing userId. Please log in again.");
+            return;
         }
-
-        String redirectUri = userId.contains("localhost")
-                ? "http://localhost:5173/admin"
-                : "https://thepragmaticplumber.netlify.app/admin";
 
         TokenResponse tokenResponse = googleAuthorizationCodeFlow.newTokenRequest(code)
                 .setRedirectUri("https://booking-app.us-east-1.elasticbeanstalk.com/service-provider/api/calendar/oauth/callback")
@@ -52,7 +51,21 @@ public class GoogleAuthController {
 
         String jwtToken = jwtService.generateToken(userId);
 
-        return String.format("{\"token\": \"%s\"}", jwtToken);
+        String htmlResponse = "<!DOCTYPE html>\n" +
+                "<html>\n" +
+                "<head><title>Auth Success</title></head>\n" +
+                "<body>\n" +
+                "<script>\n" +
+                "window.opener.postMessage({ token: '" + jwtToken + "' }, '*');\n" +
+                "window.close();\n" +
+                "</script>\n" +
+                "<p>Authentication successful. You may close this window.</p>\n" +
+                "</body>\n" +
+                "</html>";
+
+        response.setContentType("text/html");
+        response.getWriter().write(htmlResponse);
     }
+
 
 }
