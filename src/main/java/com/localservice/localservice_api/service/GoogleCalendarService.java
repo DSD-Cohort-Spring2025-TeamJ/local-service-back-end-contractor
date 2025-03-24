@@ -59,7 +59,7 @@ public class GoogleCalendarService {
     }
 
     public void syncUnsyncedAppointmentsToCalendar(String userId) throws IOException, GeneralSecurityException {
-        List<Appointment> unsyncedAppointments = appointmentRepository.findAllBySyncedWithCalendarFalse();
+        List<Appointment> unsyncedAppointments = appointmentRepository.findAllUnsyncedAppointments();
 
         var credential = googleCredentialService.getStoredCredential(userId);
 
