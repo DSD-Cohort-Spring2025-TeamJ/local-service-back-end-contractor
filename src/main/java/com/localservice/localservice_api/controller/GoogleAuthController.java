@@ -23,17 +23,19 @@ public class GoogleAuthController {
     private final JwtService jwtService;
     private final GoogleCredentialService googleCredentialService;
     private final GoogleCalendarService googleCalendarService;
+    private final GoogleCalendarConfig googleCalendarConfig;
 
-    public GoogleAuthController(GoogleAuthorizationCodeFlow googleAuthorizationCodeFlow, JwtService jwtService, GoogleCredentialService googleCredentialService, GoogleCalendarService googleCalendarService) {
+    public GoogleAuthController(GoogleAuthorizationCodeFlow googleAuthorizationCodeFlow, JwtService jwtService, GoogleCredentialService googleCredentialService, GoogleCalendarService googleCalendarService, GoogleCalendarConfig googleCalendarConfig) {
         this.googleAuthorizationCodeFlow = googleAuthorizationCodeFlow;
         this.jwtService = jwtService;
         this.googleCredentialService = googleCredentialService;
         this.googleCalendarService = googleCalendarService;
+        this.googleCalendarConfig = googleCalendarConfig;
     }
 
     @GetMapping("/login")
     public String login(@RequestParam("userId") String userId) throws IOException {
-        return GoogleCalendarConfig.getAuthorizationUrl(userId);
+        return googleCalendarConfig.getAuthorizationUrl(googleAuthorizationCodeFlow, userId);
     }
 
     @GetMapping("/callback")
