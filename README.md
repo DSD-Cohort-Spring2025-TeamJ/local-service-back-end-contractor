@@ -25,11 +25,14 @@ Welcome to the Service Booking Backend Application, a web-based platform designe
   6. **Stock Check:** If parts are unavailable, an additional email notifies the technician before their visit.
 
 ## Tech Stack
-  * Backend Languages/Framework: Java, Spring Boot, Spring Data JPA, Hibernate  
-  * Database: PostgreSQL
-  * Hosting: AWS
-  * AI Integration: OPEN AI API 3.5
-  * Google Calendar
+  * **Backend:** Java, Spring Boot, Spring Data JPA, Hibernate  
+  * **Database:** PostgreSQL (hosted on AWS RDS)  
+  * **AI Integration:** OpenAI API (GPT-3.5)  
+  * **Hosting:** AWS EC2 via Elastic Beanstalk  
+  * **CI/CD:** GitHub Actions for automated deployment  
+  * **Email Service:** Java Mail Sender / MailTrap.io
+  * **Calendar Integration:** Google Calendar API with Google Authentication and JWT 
+  * **SSL:** Configured with Let's Encrypt automated scripts 
 
 ## Installation
 
