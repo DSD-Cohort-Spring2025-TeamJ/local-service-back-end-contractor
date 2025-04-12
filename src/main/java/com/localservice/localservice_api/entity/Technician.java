@@ -17,7 +17,7 @@ public class Technician {
     private long tech_id;
 
     private String name;
-    private int hourly_rate;
+    private int hourly_rate; // TODO camel case. Hibernate will translate to snake case
     private String email;
 
     @JdbcTypeCode(SqlTypes.JSON)

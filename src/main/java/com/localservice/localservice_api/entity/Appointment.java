@@ -17,7 +17,7 @@ public class Appointment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long appointment_id;
-
+    // TODO separate client into another entity
     private String client_name;
     private String client_email;
     private String client_phone;
