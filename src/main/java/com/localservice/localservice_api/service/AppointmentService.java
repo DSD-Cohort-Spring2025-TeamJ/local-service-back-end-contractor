@@ -72,6 +72,8 @@ public class AppointmentService {
         return appointmentRepository.save(appointment);
     }
 
+    // TODO separted appointment creation and time slot reservation
+    // rename appointment to booking
     @Transactional
     public Appointment createAppointment(AppointmentRequestDto request) {
         com.localservice.localservice_api.entity.Service service = serviceRepository.findById(request.getService_id())
