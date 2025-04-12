@@ -17,9 +17,11 @@ import java.util.logging.Logger;
 
 @Configuration
 public class GoogleCalendarConfig {
+    private final CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar";
     private static final Logger logger = Logger.getLogger(GoogleCalendarConfig.class.getName());
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
-    private static final List<String> SCOPES = List.of("https://www.googleapis.com/auth/calendar");
+    private static final List<String> SCOPES = List.of(CALENDAR_SCOPE);
+
 
     @Bean
     public GoogleAuthorizationCodeFlow googleAuthorizationCodeFlow() throws GeneralSecurityException, IOException {
@@ -39,7 +41,7 @@ public class GoogleCalendarConfig {
     }
 
     public String getAuthorizationUrl(GoogleAuthorizationCodeFlow flow, String userId) {
-        return flow.newAuthorizationUrl()
+        return flow.newAuthorizationUrl()// TODO: move this to properties too
                 .setRedirectUri("https://booking-app.us-east-1.elasticbeanstalk.com/service-provider/api/calendar/oauth/callback")
                 .setState(userId)
                 .build();

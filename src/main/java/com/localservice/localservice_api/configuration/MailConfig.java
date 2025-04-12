@@ -9,16 +9,13 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import java.util.Properties;
 
 @Configuration
-public class MailConfig {
-
-    @Value("${spring.mail.username}")
+class MailConfig {
     private String mailUsername;
-
-    @Value("${spring.mail.password}")
     private String mailPassword;
 
     @Bean
-    public JavaMailSender getJavaMailSender() {
+    JavaMailSender getJavaMailSender(  @Value("${spring.mail.username}") String mailUsername,
+      @Value("${spring.mail.password}")String mailPassword) {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost("smtp.mailtrap.io");
         mailSender.setPort(2525);
