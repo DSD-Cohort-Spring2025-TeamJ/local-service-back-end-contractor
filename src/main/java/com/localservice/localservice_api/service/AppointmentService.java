@@ -36,8 +36,7 @@ public class AppointmentService {
     private final ServiceRepository serviceRepository;
     private final ServiceItemRelationRepository serviceItemRelationRepository;
     private final ServiceTechinicianRelationRepository serviceTechinicianRelationRepository;
-    @Autowired
-    private JavaMailSender javaMailSender;
+    private final JavaMailSender javaMailSender;
 
     public AppointmentService(AppointmentRepository appointmentRepository, TechnicianRepository technicianRepository, ServiceRepository serviceRepository, ServiceItemRelationRepository serviceItemRelationRepository, ServiceTechinicianRelationRepository serviceTechinicianRelationRepository) {
         this.appointmentRepository = appointmentRepository;
